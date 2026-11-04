@@ -1,21 +1,38 @@
-Refine the Anchor AI incident app UI. Keep the existing structure, layout and all functionality. Apply these changes consistently:
+Refine the Anchor AI incident app UI. Keep the existing structure, layout and all functionality. Work through the phases in order; do not start a phase until the previous one is complete.
 
-HARD CONSTRAINT: The Notification Draft is the official template exported to Word as-is. Do not change its styling, colours, fields, order, column widths or markup in any way. Treat it as fixed. All improvements happen AROUND it, never inside it.
+HARD CONSTRAINTS (apply to every phase)
+- The Notification Draft is the official template exported to Word as-is. Do not change its styling, colours, fields, order, column widths or markup. All improvements happen AROUND it.
+- Colours: use ONLY the 5 colours defined in Preferences.tps. Read that file first. Derive tints/shades of those 5 for backgrounds, borders and dark mode, but never introduce a sixth hue. Never hard-code a colour not derived from the file.
+- Do not change how times or time zones are displayed or handled.
+- Keep "Acting as" and Appearance in the sidebar exactly as they are, no added tags.
 
-PALETTE SOURCE: Use the company's official colour palette defined in Preferences.tps. Read that file first and map every colour token in the app chrome to it. Do not invent or hard-code colours that aren't in the file.
+PHASE 0 — Design standard (reference only, no code)
+The app follows Apple's Human Interface Guidelines. You cannot fetch the web, so apply these HIG principles from memory and from this summary:
+- Clarity: text legible at every size, icons precise, decoration subordinate to content. Negative space is a tool, not waste.
+- Deference: the UI frames content; it never competes with it. Thin bars, translucent or flat surfaces, restrained ornamentation.
+- Depth: layering and motion convey hierarchy. Modals and popovers sit on a distinct layer; everything else is flat.
+- Hierarchy via typography and weight, not colour. System font stack (SF Pro / -apple-system), a small type scale (11/13/15/17/22/28), semibold for emphasis.
+- One primary action per view. Secondary actions are plain or bordered. Destructive actions are red text or outline, never filled unless confirming.
+- Controls: 44pt minimum hit target, 8pt spacing grid, consistent corner radius (8–12pt), 1pt hairline separators over shadows.
+- Lists: leading content, trailing metadata and chevron, subtle row separators, no zebra striping.
+- Feedback is immediate and inline; empty and loading states are designed, not blank.
+- Dark mode is a first-class appearance with the same hierarchy, not an inverted palette.
+Avoid anything that reads as generic AI output: gradients, glassmorphism, drop shadows on cards, oversized rounded corners, emoji in UI, multiple accent colours, decorative illustrations.
 
-1. Design system: all app chrome colours come from Preferences.tps — neutrals, the primary accent, and the semantic red/amber/green equivalents. If the palette lacks a semantic colour, choose the closest match from the file and note the mapping in a comment. All status, priority and criteria indicators use one pill component with consistent semantics: Critical/Significant = palette red, High = palette amber, Elevated = palette neutral; Met = palette green check, Not met = palette grey dash. Never use red for success.
+PHASE 1 — Tokens
+Create a single token layer (CSS variables or equivalent): the 5 palette colours plus derived tints/shades, semantic roles (surface, border, text-primary, text-secondary, accent, danger, warning, success — each mapped to one of the 5 or a derivative), type scale, spacing scale, radius, and light/dark values. Replace every hard-coded colour, font size and spacing in the app chrome with these tokens. Comment any semantic role whose mapping was a judgement call.
 
-2. Incident list: priority as a coloured pill beside the status pill. Sort Needs Action by priority. Move rows with no title/entity into a collapsed "Incomplete data (n)" group instead of showing "Untitled / —". Add counts and a visible label to the "Waiting on" filter chips.
+PHASE 2 — Shared components
+Build or refactor: one Pill component (status, priority, criteria) with consistent semantics — Critical/Significant = danger, High = warning, Elevated = neutral; Met = success check, Not met = neutral dash; never red for success. One Button component with primary / secondary / destructive-outline variants and a single disabled style. One Card and one list Row component following the HIG list pattern.
 
-3. Draft layout: the draft gets the full width of the content column; comments never shrink it. Add a small sticky toolbar above it. Rename "Download Word" to a secondary button labelled "Export" with a download icon. Edit mode form fields stay in the app's own style; disable Export while there are unsaved edits.
+PHASE 3 — Incident list
+Priority pill beside the status pill. Sort Needs Action by priority. Rows with no title/entity collapsed into an "Incomplete data (n)" group instead of showing "Untitled / —". "Waiting on" filter gets a visible label and per-chip counts.
 
-4. Comments: all comment UI lives in the right-hand rail, which currently sits mostly empty. The rail is a fixed-width column (~360px) beside the draft, scrolling in sync with it. Each inline comment is a numbered marker in the draft with a matching numbered card in the rail (author, role, timestamp, quoted text); clicking either scrolls to the other. The "add comment" popover is a light card in the rail, aligned to the selection, themed to the current light/dark mode — never a dark box floating over the draft. Remove the duplicated "Sent back by 2LOD" block; show it once as a banner above the decision section.
+PHASE 4 — Incident detail
+Header: keep INC number, title, pills, stepper; add a compact meta row (incident manager, occurred, last updated).
+Draft: full width of the content column; comments never shrink it. Sticky toolbar above it. Rename "Download Word" to a secondary "Export" button with a download icon; disable while there are unsaved edits. Edit-mode fields use app tokens, not template styling.
+Comments: all comment UI lives in the right rail (~360px fixed, scrolls with the draft). Numbered marker in the draft ↔ numbered card in the rail (author, role, timestamp, quoted text); clicking either scrolls to the other. The add-comment popover is a light card in the rail aligned to the selection, themed to the current mode — never a dark box over the draft. "Sent back by 2LOD" appears once, as a banner above the decision section.
+Decision bar: sticky footer; Reject = destructive outline, Approve = the single filled primary, Send feedback = secondary; "reason required" hint only when Reject is attempted without a note.
 
-5. Decision bar: sticky footer in the content column. One disabled style for all buttons. Reject = destructive outline, Approve = the single filled primary, Send feedback = secondary. Show the "reason required" hint only when Reject is attempted without a note.
-
-6. Detail header: keep INC number, title, pills and stepper; add a compact meta row (incident manager, occurred, last updated). Do not change how times or time zones are displayed or handled anywhere.
-
-7. Sidebar: meaningful icons for each nav item and a clear active state. Keep "Acting as" and Appearance exactly where they are (dev environment), unchanged and with no added tags.
-
-8. Typography/spacing: 8px scale, 13–14px body, 44px min touch targets, consistent radius, 1px borders over shadows, full dark-mode parity for the app chrome (the template stays unchanged in both themes).
+PHASE 5 — Sidebar and polish
+Meaningful icon per nav item, clear active state. Full dark-mode pass over all app chrome using Phase 1 tokens (template unchanged in both modes). Final sweep: 44pt targets, 8pt grid, hairline borders, no shadows on cards, no stray colours.
