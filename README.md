@@ -1,38 +1,62 @@
-Refine the Anchor AI incident app UI. Keep the existing structure, layout and all functionality. Work through the phases in order; do not start a phase until the previous one is complete.
+You are working in the Anchor AI codebase (regulatory notification system, FastAPI backend + frontend). Fix and complete the comment workflow between 1LOD and 2LOD end to end, then verify it with Playwright MCP. Work autonomously and don't stop to ask questions. Where something is ambiguous, pick the most reasonable option and list it in your final summary.
 
-HARD CONSTRAINTS (apply to every phase)
-- The Notification Draft is the official template exported to Word as-is. Do not change its styling, colours, fields, order, column widths or markup. All improvements happen AROUND it.
-- Colours: use ONLY the 5 colours defined in Preferences.tps. Read that file first. Derive tints/shades of those 5 for backgrounds, borders and dark mode, but never introduce a sixth hue. Never hard-code a colour not derived from the file.
-- Do not change how times or time zones are displayed or handled.
-- Keep "Acting as" and Appearance in the sidebar exactly as they are, no added tags.
+## Step 1: Explore first (use graphify)
+Use graphify to map the codebase before changing anything. Build or refresh the graph for the repo, then query it to find:
+- the comments feature (frontend components, state, API routes, DB models)
+- how notifications are handed off between 1LOD and 2LOD
+- how user roles are modeled and checked
+- every place that decides whether edit/resolve/delete controls are shown
 
-PHASE 0 — Design standard (reference only, no code)
-The app follows Apple's Human Interface Guidelines. You cannot fetch the web, so apply these HIG principles from memory and from this summary:
-- Clarity: text legible at every size, icons precise, decoration subordinate to content. Negative space is a tool, not waste.
-- Deference: the UI frames content; it never competes with it. Thin bars, translucent or flat surfaces, restrained ornamentation.
-- Depth: layering and motion convey hierarchy. Modals and popovers sit on a distinct layer; everything else is flat.
-- Hierarchy via typography and weight, not colour. System font stack (SF Pro / -apple-system), a small type scale (11/13/15/17/22/28), semibold for emphasis.
-- One primary action per view. Secondary actions are plain or bordered. Destructive actions are red text or outline, never filled unless confirming.
-- Controls: 44pt minimum hit target, 8pt spacing grid, consistent corner radius (8–12pt), 1pt hairline separators over shadows.
-- Lists: leading content, trailing metadata and chevron, subtle row separators, no zebra striping.
-- Feedback is immediate and inline; empty and loading states are designed, not blank.
-- Dark mode is a first-class appearance with the same hierarchy, not an inverted palette.
-Avoid anything that reads as generic AI output: gradients, glassmorphism, drop shadows on cards, oversized rounded corners, emoji in UI, multiple accent colours, decorative illustrations.
+## Step 2: Root cause
+Currently, edit/resolve/delete controls are tied to whoever currently holds the notification instead of to the comment itself. Result: after a hand-off, the other LOD sees no actions, and an author whose comment was sent back loses their own controls. Fix permissions so they derive from (comment.author_role, comment.status, viewer_role), never from the workflow stage.
 
-PHASE 1 — Tokens
-Create a single token layer (CSS variables or equivalent): the 5 palette colours plus derived tints/shades, semantic roles (surface, border, text-primary, text-secondary, accent, danger, warning, success — each mapped to one of the 5 or a derivative), type scale, spacing scale, radius, and light/dark values. Replace every hard-coded colour, font size and spacing in the app chrome with these tokens. Comment any semantic role whose mapping was a judgement call.
+## Step 3: Required behavior
 
-PHASE 2 — Shared components
-Build or refactor: one Pill component (status, priority, criteria) with consistent semantics — Critical/Significant = danger, High = warning, Elevated = neutral; Met = success check, Not met = neutral dash; never red for success. One Button component with primary / secondary / destructive-outline variants and a single disabled style. One Card and one list Row component following the HIG list pattern.
+Scope: single comments only. NO replies or threads.
 
-PHASE 3 — Incident list
-Priority pill beside the status pill. Sort Needs Action by priority. Rows with no title/entity collapsed into an "Incomplete data (n)" group instead of showing "Untitled / —". "Waiting on" filter gets a visible label and per-chip counts.
+Data model (backend + frontend types):
+- id, notification_id, author_role ("1LOD" | "2LOD"), author_id if available, body, created_at, edited_at (nullable), status ("open" | "resolved"), resolved_by_role, resolved_by_id, resolved_at, deleted_at (soft delete).
+- Add an append-only audit log table/collection for comment events (created, edited, resolved, reopened, deleted) with actor, role, timestamp, and the previous body on edit/delete. Soft-deleted comments are hidden from the UI but remain in the audit log.
 
-PHASE 4 — Incident detail
-Header: keep INC number, title, pills, stepper; add a compact meta row (incident manager, occurred, last updated).
-Draft: full width of the content column; comments never shrink it. Sticky toolbar above it. Rename "Download Word" to a secondary "Export" button with a download icon; disable while there are unsaved edits. Edit-mode fields use app tokens, not template styling.
-Comments: all comment UI lives in the right rail (~360px fixed, scrolls with the draft). Numbered marker in the draft ↔ numbered card in the rail (author, role, timestamp, quoted text); clicking either scrolls to the other. The add-comment popover is a light card in the rail aligned to the selection, themed to the current mode — never a dark box over the draft. "Sent back by 2LOD" appears once, as a banner above the decision section.
-Decision bar: sticky footer; Reject = destructive outline, Approve = the single filled primary, Send feedback = secondary; "reason required" hint only when Reject is attempted without a note.
+Visibility:
+- Both 1LOD and 2LOD see ALL comments (open and resolved) at EVERY workflow stage.
 
-PHASE 5 — Sidebar and polish
-Meaningful icon per nav item, clear active state. Full dark-mode pass over all app chrome using Phase 1 tokens (template unchanged in both modes). Final sweep: 44pt targets, 8pt grid, hairline borders, no shadows on cards, no stray colours.
+Permissions (enforce on the backend too, return 403 on violation, don't rely on UI hiding):
+- Edit: author role only, only while status = open. Show an "edited" tag after editing.
+- Delete (soft): author role only, only while status = open. Add a confirm step.
+- Resolve: the author OR the other LOD. Anyone who can resolve can reopen.
+- Resolved comments are read-only except for Reopen.
+- This must hold across hand-offs: if 2LOD wrote a comment, sent it to 1LOD, and 1LOD sends it back without resolving, 2LOD still has Edit, Delete and Resolve.
+
+Display:
+- Each comment shows a role badge (1LOD / 2LOD) and timestamp (relative, full timestamp on hover). No individual author name needed.
+- Open comments appear at the top, highlighted.
+- Resolved comments move into a separate "Resolved (n)" section below, COLLAPSED by default, dimmed and un-highlighted. Expanding shows each with "Resolved by <role> · <time>" and a Reopen button.
+- Resolving/reopening updates the UI immediately (optimistic or refetch) with no page refresh. Reopened comments return to the open section and get re-highlighted.
+
+Hand-off:
+- When sending a notification forward or back, show "N open comments" in the confirmation. Do NOT block the send.
+- Show an open-comment count badge on the notification for the recipient.
+
+## Step 4: Implement
+Make backend changes (models/migrations, endpoints, permission checks, audit logging), frontend changes (components, state, permission helper, collapsed Resolved section, badges, confirm dialogs), and update types and API clients. Centralize the permission logic in one function (e.g. canEdit/canDelete/canResolve/canReopen(comment, viewerRole)) and unit test it.
+
+## Step 5: Tests
+1. Backend: pytest tests for every permission rule (allowed and 403 cases), soft delete, audit log entries, and visibility across stages.
+2. Frontend: unit tests for the permission helper and the open/resolved grouping.
+3. END-TO-END with Playwright MCP. Start the backend and frontend, seed (or log in as) a 1LOD user and a 2LOD user in two separate browser contexts/sessions, and actually drive the browser through these scenarios. Take a screenshot at each key step and assert on the DOM:
+   a. 1LOD adds a comment. Sees Edit/Resolve/Delete, role badge "1LOD", and timestamp.
+   b. 1LOD sends the notification to 2LOD. The confirmation shows "1 open comment". 2LOD sees the comment but NO Edit/Delete. 2LOD does see Resolve.
+   c. 2LOD adds their own comment. 2LOD sees Edit/Resolve/Delete on it. 1LOD sees only Resolve on it.
+   d. 2LOD sends it back to 1LOD WITHOUT anyone resolving. 1LOD sees both comments. Then 1LOD sends it back to 2LOD again unresolved. 2LOD STILL has Edit/Delete/Resolve on their own comment (this is the original bug, so assert it explicitly).
+   e. 2LOD edits their comment: "edited" tag appears; 1LOD sees the updated text after refresh/poll.
+   f. 1LOD resolves 2LOD's comment: it leaves the open section, is dimmed, un-highlighted, and lands in a collapsed "Resolved (1)" section. Expand it to verify "Resolved by 1LOD · time" and Reopen. Edit/Delete are absent.
+   g. 2LOD reopens it: it returns to the open section, highlighted.
+   h. 2LOD deletes their open comment (confirm dialog): it disappears from both views. Verify via API/DB that the audit log still has the original text and the deleted_at/actor.
+   i. Negative checks: call the edit/delete API directly as the non-author role and confirm 403.
+4. Run everything. If any test fails, fix the code (not the test, unless the test is wrong) and rerun until all pass. Check the browser console for errors during the E2E run.
+
+## Step 6: Deliverables
+- All code changes, migrations, and tests committed on a new branch (don't push to main).
+- Save the Playwright E2E scenarios as a re-runnable spec in the repo's test directory if the project uses Playwright test; otherwise add a short README section on how to rerun them.
+- Final summary (concise): what was changed, the permission matrix as a table, test results (pass/fail counts, including the E2E scenarios a-i), screenshots' locations, and any assumptions or decisions you made.
