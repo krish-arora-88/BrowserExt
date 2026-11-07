@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EIM AI Chatbot — Admin</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #fafafa; --card: #ffffff; --border: #e4e4e7; --border-2: #f1f1f3;
+    --fg: #09090b; --muted-fg: #71717a; --muted: #f4f4f5; --accent: #f4f4f5;
+    --primary: #18181b; --primary-fg: #fafafa;
+    --brand: #0a3d91; --brand-soft: #e8effb;
+    --s1: #2a78d6; --s2: #eb6834;
+    --good: #16a34a; --good-bg: #dcfce7; --good-fg: #166534;
+    --warn-bg: #fef3c7; --warn-fg: #92400e;
+    --bad: #dc2626; --bad-bg: #fee2e2; --bad-fg: #991b1b;
+    --r: 8px; --shadow: 0 1px 2px rgba(0,0,0,.05);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; overflow: hidden; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 14px; color: var(--fg); background: var(--bg); line-height: 1.45; }
+  button { font: inherit; cursor: pointer; }
+  input, select, textarea { font: inherit; color: inherit; }
+  svg.i { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+  .app { display: grid; grid-template-columns: 256px 1fr; height: 100vh; }
+
+  /* ---------- Sidebar ---------- */
+  aside { background: var(--card); border-right: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 16px 16px 12px; border-bottom: 1px solid var(--border-2); }
+  .brand .logo { width: 32px; height: 32px; border-radius: 8px; background: var(--brand); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+  .brand .name { font-weight: 600; font-size: 14px; line-height: 1.2; }
+  .brand .sub { font-size: 11px; color: var(--muted-fg); }
+  .nav { padding: 12px 8px; display: grid; gap: 2px; }
+  .nav .lbl { font-size: 11px; color: var(--muted-fg); font-weight: 500; padding: 8px 10px 4px; text-transform: uppercase; letter-spacing: .04em; }
+  .nav button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 8px 10px; border: 0; background: transparent; border-radius: 6px; color: var(--fg); font-size: 14px; }
+  .nav button:hover { background: var(--accent); }
+  .nav button[aria-current="page"] { background: var(--primary); color: var(--primary-fg); }
+  .overview { margin: 8px 16px; padding: 12px; border: 1px solid var(--border); border-radius: var(--r); display: grid; gap: 8px; }
+  .overview .t { font-size: 11px; color: var(--muted-fg); font-weight: 500; text-transform: uppercase; letter-spacing: .04em; }
+  .ov { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+  .ov b { font-variant-numeric: tabular-nums; }
+  .ov .pill { min-width: 24px; text-align: center; padding: 1px 7px; border-radius: 999px; font-weight: 600; font-size: 12px; }
+  .user { margin-top: auto; border-top: 1px solid var(--border-2); padding: 12px 16px; display: flex; align-items: center; gap: 10px; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--brand-soft); color: var(--brand); display: grid; place-items: center; font-weight: 600; font-size: 12px; }
+  .user .n { font-size: 13px; font-weight: 500; line-height: 1.2; }
+  .user .e { font-size: 11px; color: var(--muted-fg); }
+  .user .sp { margin-left: auto; display: flex; gap: 4px; }
+  .ghost { background: transparent; border: 0; color: var(--muted-fg); padding: 6px; border-radius: 6px; }
+  .ghost:hover { background: var(--accent); color: var(--fg); }
+
+  /* ---------- Main ---------- */
+  main { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+  .topbar { height: 56px; display: flex; align-items: center; gap: 12px; padding: 0 24px; border-bottom: 1px solid var(--border); background: var(--card); }
+  .topbar h1 { font-size: 16px; font-weight: 600; margin: 0; }
+  .topbar .crumb { color: var(--muted-fg); font-size: 13px; display: flex; align-items: center; gap: 6px; }
+  .topbar .right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .content { flex: 1; overflow: auto; padding: 24px; }
+  .view { display: none; } .view.active { display: block; }
+
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; background: var(--card); padding: 2px; }
+  .seg button { border: 0; background: transparent; padding: 5px 10px; border-radius: 4px; font-size: 13px; color: var(--muted-fg); }
+  .seg button[aria-pressed="true"] { background: var(--primary); color: var(--primary-fg); }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--card); font-size: 13px; font-weight: 500; }
+  .btn:hover { background: var(--accent); }
+  .btn.primary { background: var(--primary); color: var(--primary-fg); border-color: var(--primary); }
+  .btn.primary:hover { background: #27272a; }
+  .btn.sm { padding: 4px 9px; font-size: 12px; }
+  .btn.danger { color: var(--bad); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .input, .select, textarea.input { padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); font-size: 13px; outline: none; }
+  .input:focus, .select:focus, textarea.input:focus { border-color: #a1a1aa; box-shadow: 0 0 0 3px rgba(24,24,27,.08); }
+  .pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .pill.ok { background: var(--good-bg); color: var(--good-fg); }
+  .pill.warn { background: var(--warn-bg); color: var(--warn-fg); }
+  .pill.bad { background: var(--bad-bg); color: var(--bad-fg); }
+  .pill.neutral { background: var(--muted); color: var(--muted-fg); }
+  .pill.info { background: var(--brand-soft); color: var(--brand); }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--shadow); }
+  .card .hd { padding: 14px 16px 0; }
+  .card .hd h3 { margin: 0; font-size: 14px; font-weight: 600; }
+  .card .hd p { margin: 2px 0 0; font-size: 12px; color: var(--muted-fg); }
+  .card .bd { padding: 14px 16px 16px; }
+
+  /* KPI */
+  .kpis { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+  .kpi { padding: 14px 16px; }
+  .kpi .l { font-size: 12px; color: var(--muted-fg); display: flex; align-items: center; gap: 5px; }
+  .kpi .v { font-size: 26px; font-weight: 600; letter-spacing: -.02em; margin-top: 4px; line-height: 1.1; }
+  .kpi .s { font-size: 11px; color: var(--muted-fg); margin-top: 4px; }
+  .help { display: inline-grid; place-items: center; width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--border); color: var(--muted-fg); font-size: 9px; font-weight: 700; cursor: help; position: relative; }
+  .help:hover::after { content: attr(data-tip); position: absolute; left: 0; top: 130%; background: var(--primary); color: #fff; padding: 6px 9px; border-radius: 6px; font-size: 11px; font-weight: 400; width: 200px; z-index: 30; line-height: 1.35; }
+  .grid { display: grid; gap: 12px; margin-top: 12px; }
+  .g-trend { grid-template-columns: 3fr 1fr; }
+  .g-half { grid-template-columns: 1fr 1fr; }
+  .chart { position: relative; }
+  .chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .tt { position: absolute; display: none; pointer-events: none; background: var(--primary); color: #fff; font-size: 11px; padding: 5px 8px; border-radius: 5px; white-space: nowrap; transform: translate(-50%, -120%); z-index: 10; }
+  .legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted-fg); margin-top: 8px; }
+  .legend span::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; background: var(--c); vertical-align: -1px; }
+  .vrow { display: grid; grid-template-columns: 90px 1fr 36px; gap: 10px; align-items: center; font-size: 13px; margin: 8px 0; }
+  .vrow .bar { height: 10px; background: var(--muted); border-radius: 3px; overflow: hidden; }
+  .vrow .bar i { display: block; height: 100%; background: var(--s1); transition: width .3s; }
+  .vrow .n { text-align: right; color: var(--muted-fg); font-variant-numeric: tabular-nums; }
+  .perf { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .perf .kpi { border: 1px solid var(--border-2); border-radius: 6px; background: var(--bg); }
+  .perf .kpi .v { font-size: 20px; }
+  .empty { padding: 20px; text-align: center; color: var(--muted-fg); font-size: 13px; border: 1px dashed var(--border); border-radius: 6px; }
+
+  /* Feedback list */
+  .filters { display: grid; grid-template-columns: 2fr 1.2fr 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .filters label { display: grid; gap: 4px; font-size: 12px; color: var(--muted-fg); font-weight: 500; }
+  .count { font-size: 13px; color: var(--muted-fg); margin: 0 0 8px; display: flex; gap: 10px; align-items: center; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 10px 12px; border-bottom: 1px solid var(--border-2); text-align: left; vertical-align: middle; }
+  th { font-size: 12px; color: var(--muted-fg); font-weight: 500; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.row { cursor: pointer; } tr.row:hover { background: var(--accent); }
+  tr.row td:first-child { font-weight: 500; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; color: var(--muted-fg); }
+  .rate { white-space: nowrap; color: var(--muted-fg); display: inline-flex; gap: 10px; }
+  .rate b { color: var(--fg); font-weight: 600; }
+
+  /* Conversation detail */
+  .conv { display: grid; grid-template-columns: 1fr 340px; gap: 12px; align-items: start; }
+  .thread { display: grid; gap: 14px; }
+  .msg { display: flex; gap: 10px; }
+  .msg .av { width: 28px; height: 28px; border-radius: 6px; display: grid; place-items: center; flex: none; font-size: 11px; font-weight: 600; }
+  .msg.user .av { background: var(--muted); color: var(--muted-fg); }
+  .msg.bot .av { background: var(--brand); color: #fff; }
+  .msg .b { flex: 1; min-width: 0; }
+  .msg .who { font-size: 12px; color: var(--muted-fg); margin-bottom: 4px; display: flex; gap: 8px; align-items: center; }
+  .msg .txt { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 10px 14px; font-size: 13.5px; }
+  .msg.bot .txt { border-left: 3px solid var(--brand); }
+  .src { margin-top: 8px; font-size: 12px; color: var(--muted-fg); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .src a { color: var(--brand); text-decoration: none; }
+  .acts { display: flex; gap: 8px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+  .fb-box { margin-top: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); padding: 10px 12px; font-size: 12.5px; display: grid; gap: 6px; }
+  .fb-box .ver { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .fb-box .ver .q { color: var(--muted-fg); }
+  .fb-box .ans { background: var(--card); border: 1px solid var(--border-2); border-radius: 4px; padding: 6px 8px; }
+  .side .card + .card { margin-top: 12px; }
+  .kv { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; font-size: 13px; }
+  .kv span:first-child { color: var(--muted-fg); }
+
+  /* Dialog */
+  .overlay { position: fixed; inset: 0; background: rgba(9,9,11,.45); display: none; align-items: center; justify-content: center; z-index: 50; }
+  .overlay.open { display: flex; }
+  .dialog { width: 640px; max-width: calc(100vw - 32px); background: var(--card); border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+  .dialog .dh { padding: 16px 20px 0; } .dialog .dh h3 { margin: 0; font-size: 16px; } .dialog .dh p { margin: 2px 0 0; color: var(--muted-fg); font-size: 13px; }
+  .dialog .db { padding: 16px 20px; display: grid; gap: 12px; }
+  .dialog .df { padding: 12px 20px 16px; display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--border-2); }
+  .field { display: grid; gap: 5px; } .field label { font-size: 12px; font-weight: 500; }
+  .field .hint { font-size: 11px; color: var(--muted-fg); }
+  .choices { display: flex; gap: 6px; flex-wrap: wrap; }
+  .choice { border: 1px solid var(--border); background: var(--card); border-radius: 6px; padding: 6px 12px; font-size: 13px; }
+  .choice[aria-pressed="true"] { background: var(--primary); color: var(--primary-fg); border-color: var(--primary); }
+  .toast { position: fixed; right: 20px; bottom: 20px; background: var(--primary); color: #fff; padding: 10px 14px; border-radius: 8px; font-size: 13px; box-shadow: 0 8px 24px rgba(0,0,0,.2); display: none; z-index: 60; }
+  .toast.show { display: block; animation: up .2s ease-out; }
+  @keyframes up { from { transform: translateY(8px); opacity: 0; } }
+  .demo-tag { font-size: 11px; color: var(--muted-fg); background: var(--muted); padding: 2px 9px; border-radius: 999px; margin-left: 4px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand">
+      <div class="logo">EIM</div>
+      <div><div class="name">EIM AI Chatbot</div><div class="sub">Admin console</div></div>
+    </div>
+    <nav class="nav">
+      <div class="lbl">Admin</div>
+      <button data-view="dashboard" aria-current="page"><svg class="i" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg> KPI Dashboard</button>
+      <button data-view="feedback"><svg class="i" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Policy Owner Feedback</button>
+    </nav>
+    <div class="overview">
+      <div class="t">Overview</div>
+      <div class="ov"><span>Total conversations</span><b id="ov-total">0</b></div>
+      <div class="ov"><span>Needs review</span><span class="pill warn" id="ov-review">0</span></div>
+      <div class="ov"><span>Has conflicts</span><span class="pill bad" id="ov-conf">0</span></div>
+    </div>
+    <div class="user">
+      <div class="avatar">SB</div>
+      <div><div class="n">Satish B.</div><div class="e">Administrator</div></div>
+      <div class="sp">
+        <button class="ghost" title="Back to chat"><svg class="i" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+        <button class="ghost" title="Log out"><svg class="i" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="topbar">
+      <h1 id="title">KPI Dashboard</h1>
+      <div class="crumb" id="crumb"></div>
+      <span class="demo-tag">Demo · illustrative data</span>
+      <div class="right" id="topbar-right"></div>
+    </div>
+    <div class="content">
+
+      <!-- ===== Dashboard ===== -->
+      <div class="view active" id="view-dashboard">
+        <div class="kpis" id="kpis"></div>
+        <div class="grid g-trend">
+          <div class="card">
+            <div class="hd"><h3>Volume trends</h3><p>Sessions started and escalations raised per day</p></div>
+            <div class="bd">
+              <div class="chart" id="c-sess"><div class="tt"></div></div>
+              <div class="chart" id="c-esc" style="margin-top:10px"><div class="tt"></div></div>
+              <div class="legend"><span style="--c:var(--s1)">Sessions</span><span style="--c:var(--s2)">Escalations</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="hd"><h3>Escalation split</h3><p>Auto vs manual</p></div>
+            <div class="bd"><div class="chart" id="c-donut"><div class="tt"></div></div><div class="legend" id="donut-legend"></div></div>
+          </div>
+        </div>
+        <div class="grid g-half">
+          <div class="card">
+            <div class="hd"><h3>SME feedback distribution</h3><p>Policy owner verdicts in the period</p></div>
+            <div class="bd" id="verdicts"></div>
+          </div>
+          <div class="card">
+            <div class="hd"><h3>System performance</h3><p>Averages over assistant responses</p></div>
+            <div class="bd"><div class="perf" id="perf"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Feedback: list ===== -->
+      <div class="view" id="view-feedback">
+        <div class="filters">
+          <label>Search <input class="input" id="f-q" placeholder="Filter by title, user or session ID…"></label>
+          <label>Date range <select class="select" id="f-range"><option value="7">Past week</option><option value="30" selected>Past month</option><option value="90">Past 3 months</option><option value="365">Past year</option></select></label>
+          <label>User rating <select class="select" id="f-rating"><option value="all">All ratings</option><option value="down">Has thumbs-down</option><option value="up">Has thumbs-up</option><option value="none">Unrated only</option></select></label>
+          <label>Sort <select class="select" id="f-sort"><option value="recent">Most recent</option><option value="down">Most thumbs-down</option><option value="unrated">Most unrated</option><option value="conf">Conflicts first</option></select></label>
+        </div>
+        <p class="count"><span id="f-count"></span><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="f-attn"> Needs review only</label></p>
+        <div class="card"><table id="sess-table">
+          <thead><tr><th>Conversation</th><th>User</th><th>Last activity</th><th class="num">Responses</th><th>User ratings</th><th class="num">Feedback</th><th>Status</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+
+      <!-- ===== Feedback: conversation ===== -->
+      <div class="view" id="view-conv">
+        <div class="conv">
+          <div class="thread" id="thread"></div>
+          <div class="side" id="conv-side"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Feedback dialog -->
+<div class="overlay" id="dlg">
+  <div class="dialog" role="dialog" aria-modal="true">
+    <div class="dh"><h3>Policy owner feedback</h3><p>Record a verdict on this response. Corrections are versioned and, once accepted, used by the assistant for future answers.</p></div>
+    <div class="db">
+      <div class="field"><label>User question <span class="hint">(editable)</span></label><input class="input" id="d-q"></div>
+      <div class="field"><label>Assistant response</label><div class="input" id="d-a" style="background:var(--bg);max-height:90px;overflow:auto;font-size:12.5px"></div></div>
+      <div class="field"><label>Verdict</label><div class="choices" id="d-verdict">
+        <button class="choice" data-v="Correct">Correct</button><button class="choice" data-v="Incomplete" aria-pressed="true">Incomplete</button><button class="choice" data-v="Has Errors">Has Errors</button><button class="choice" data-v="Unclear">Unclear</button>
+      </div></div>
+      <div class="field"><label>Corrected answer <span class="hint">(min. 20 characters)</span></label><textarea class="input" id="d-ans" rows="4"></textarea></div>
+    </div>
+    <div class="df"><button class="btn" id="d-cancel">Cancel</button><button class="btn primary" id="d-submit">Submit feedback</button></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  // ====================== Mock data ======================
+  function rng(seed) { return () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; }; }
+  const R = rng(11);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const fmtD = d => d.toLocaleDateString("en-CA", { month: "short", day: "numeric" });
+  const fmtDT = d => `${fmtD(d)}, ${d.toLocaleTimeString("en-CA", { hour: "numeric", minute: "2-digit" })}`;
+  const fmtN = n => n.toLocaleString("en-CA");
+
+  // daily metrics (90 days)
+  const daily = [];
+  for (let i = 89; i >= 0; i--) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    const we = d.getDay() === 0 || d.getDay() === 6;
+    const g = 1 + (90 - i) / 90 * 0.6;
+    const sessions = Math.max(0, Math.round((we ? 5 : 22) * g + (R() - 0.5) * 9));
+    const msgs = Math.round(sessions * (2.3 + R() * 1.2));
+    daily.push({ d, sessions, users: Math.round(sessions * 0.75), msgs, auto: Math.round(msgs * (0.025 + R() * 0.02)), manual: Math.round(msgs * (0.01 + R() * 0.012)),
+      up: 0, down: 0, llm: 2500 + R() * 900, retr: 350 + R() * 180, tok: 410 + R() * 160 });
+    const rated = Math.round(msgs * 0.35); daily[daily.length - 1].up = Math.round(rated * (0.78 + R() * 0.12)); daily[daily.length - 1].down = rated - daily[daily.length - 1].up;
+  }
+
+  const SRC = { title: "Enterprise Issue Management Policy", url: "#" };
+  const QA = [
+    ["What is the severity assessment criteria for operational risk issues?", "Issue severity is determined using a four-level scale — Critical, High, Medium and Low — based on financial impact, regulatory exposure, client impact and reputational risk. The highest applicable dimension sets the overall rating [Source 1].", "Severity Assessment Scale"],
+    ["What is the filing deadline for an EIM issue once it has been discovered?", "Issues should be filed promptly after discovery in the issue management system, in line with the Enterprise Issue Management Policy [Source 1].", "Issue Identification and Filing"],
+    ["Who approves an extension to a remediation plan?", "Extensions must be approved by the Issue Owner and the 2LoD Risk Reviewer. For Critical and High issues, the Practice Owner must also approve [Source 1].", "Remediation Plans"],
+    ["What is the difference between an issue owner and an action owner?", "The Issue Owner is accountable for the issue end to end, including severity, remediation plan and closure. An Action Owner is responsible for delivering one specific remediation action within that plan [Source 1].", "Roles and Responsibilities"],
+    ["When is an issue considered regulatory-linked?", "An issue is regulatory-linked when it was identified by, reported to, or relates to a requirement from a regulator or supervisory body. Regulatory-linked issues follow the external regulatory issues process [Source 1].", "External Regulatory Issues"],
+    ["Can an issue be closed with partial remediation?", "No. An issue may only be closed once all remediation actions are complete and closure evidence has been validated. Partial completion may support a severity downgrade but not closure [Source 1].", "Issue Closure"],
+    ["What evidence is required to validate closure?", "Closure requires documented evidence for each remediation action, reviewed and validated by the 2LoD Risk Reviewer before the issue status is set to Closed [Source 1].", "Issue Closure"],
+    ["What is the escalation path for a critical issue?", "Critical issues are escalated to the Practice Owner and the relevant Risk Committee within two business days of rating confirmation [Source 1].", "Escalation"],
+    ["Can a low-severity issue be self-identified and closed by the same team?", "Low-severity self-identified issues can be remediated by the identifying team, but closure validation by the 2LoD Risk Reviewer is still required [Source 1].", "Issue Closure"],
+    ["What is the timeline for completing a root cause analysis?", "A root cause analysis should be completed before the remediation plan is finalized. The policy does not set a fixed number of days; timing is driven by the severity rating [Source 1].", "Root Cause Analysis"],
+    ["How do I report an issue found by internal audit?", "Issues raised by Internal Audit are entered by the auditee's Issue Owner, with the audit report reference attached, and follow the same severity and remediation process [Source 1].", "Issue Identification and Filing"],
+    ["How can issue severity be reclassified?", "Severity can be reclassified by the Issue Owner with 2LoD Risk Reviewer concurrence. A downgrade of a Critical or High issue also requires Practice Owner approval and a documented rationale [Source 1].", "Severity Assessment Scale"],
+    ["Who is the practice owner for EIM?", "I was not able to find a specific policy section that names the current Practice Owner. I recommend escalating this question so a practice owner can respond directly.", null],
+    ["What are the SLA days for High severity remediation?", "High severity issues should be remediated within the timeframe agreed in the remediation plan, which is typically 180 days [Source 1].", "Remediation Plans"],
+  ];
+  const users = [["A. Patel", "apatel"], ["J. Moreau", "jmoreau"], ["S. Okafor", "sokafor"], ["L. Chen", "lchen"], ["M. Rossi", "mrossi"], ["K. Nguyen", "knguyen"], ["R. Singh", "rsingh"]];
+  const R2 = rng(5);
+  const sessions = QA.map((qa, i) => {
+    const d = new Date(today); d.setDate(today.getDate() - Math.floor(R2() * 26)); d.setHours(8 + Math.floor(R2() * 9), Math.floor(R2() * 60));
+    const u = users[i % users.length];
+    const msgs = [];
+    const pushPair = (q, a, sec, k) => {
+      msgs.push({ id: `msg_${i}u${k}`, role: "user", content: q, ts: new Date(d.getTime() + k * 120000) });
+      msgs.push({ id: `msg_${i}a${k}`, role: "assistant", content: a, ts: new Date(d.getTime() + k * 120000 + 9000), sources: sec ? [{ doc_title: SRC.title, section_title: sec }] : [], escalation_required: !sec, rating: null, comment: null });
+    };
+    pushPair(qa[0], qa[1], qa[2], 0);
+    if (R2() < 0.55) pushPair("Can you point me to the exact section?", `Yes — see the section "${qa[2] || "Escalation"}" of the ${SRC.title} [Source 1].`, qa[2] || "Escalation", 1);
+    return { id: `s${i}`, session_id: crypto.randomUUID ? crypto.randomUUID() : `sess-${i}`, title: qa[0].replace(/\?$/, ""), user: u[0], user_id: u[1], updated: d, msgs };
+  });
+  // seed ratings
+  sessions[1].msgs[1].rating = "thumbs_down"; sessions[1].msgs[1].comment = "Didn't give the actual deadline";
+  sessions[13].msgs[1].rating = "thumbs_down"; sessions[13].msgs[1].comment = "Not sure 180 days is right";
+  sessions[12].msgs[1].rating = "thumbs_down";
+  [0, 2, 3, 5, 6, 7, 10].forEach(i => sessions[i].msgs[1].rating = "thumbs_up");
+  sessions.forEach(s => s.msgs.forEach(m => { if (m.role === "assistant" && m.id.endsWith("a1")) m.rating = "thumbs_up"; }));
+  // seed feedback (versioned, per message)
+  const feedback = {}; // message_id -> [{feedback_id, version, verdict, user_question, corrected_answer, created_by, created_at, accepted}]
+  function addFb(mid, verdict, q, ans, by, daysAgo, accepted = false) {
+    const list = feedback[mid] || (feedback[mid] = []);
+    const at = new Date(today); at.setDate(today.getDate() - daysAgo); at.setHours(14, 20);
+    list.push({ feedback_id: Math.random().toString(16).slice(2, 10), version: list.length + 1, verdict, user_question: q, corrected_answer: ans, created_by: by, created_at: at, accepted });
+  }
+  addFb(sessions[0].msgs[1].id, "Correct", QA[0][0], QA[0][1], "satish.b", 6, false);
+  addFb(sessions[13].msgs[1].id, "Has Errors", QA[13][0], "High severity issues must be remediated within 90 calendar days of rating confirmation unless an extension is approved by the Issue Owner and 2LoD Risk Reviewer.", "satish.b", 4);
+  addFb(sessions[13].msgs[1].id, "Has Errors", QA[13][0], "High severity issues must be remediated within 120 calendar days of rating confirmation; extensions require Practice Owner approval.", "m.rossi", 2);
+  addFb(sessions[5].msgs[1].id, "Incomplete", QA[5][0], "No. An issue may only be closed once all remediation actions are complete and closure evidence is validated by the 2LoD Risk Reviewer. Partial completion may support a severity downgrade, which itself requires 2LoD concurrence.", "satish.b", 9, true);
+  addFb(sessions[5].msgs[1].id, "Incomplete", QA[5][0], "Closure requires all actions complete and evidence validated. Partial remediation is never sufficient for closure.", "k.nguyen", 8);
+
+  // ====================== Helpers ======================
+  const $ = s => document.querySelector(s);
+  const toast = t => { const el = $("#toast"); el.textContent = t; el.classList.add("show"); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("show"), 2800); };
+  const stats = s => {
+    const a = s.msgs.filter(m => m.role === "assistant");
+    const r = { response_count: a.length, up: a.filter(m => m.rating === "thumbs_up").length, down: a.filter(m => m.rating === "thumbs_down").length };
+    r.none = a.length - r.up - r.down;
+    r.feedback_count = a.filter(m => (feedback[m.id] || []).length).length;
+    r.unresolved = a.filter(m => { const f = feedback[m.id] || []; return f.length > 1 && !f.some(x => x.accepted); }).length;
+    r.needsReview = a.some(m => (m.rating === "thumbs_down" || m.escalation_required) && !(feedback[m.id] || []).length) || r.unresolved > 0;
+    return r;
+  };
+  function refreshOverview() {
+    const all = sessions.map(stats);
+    $("#ov-total").textContent = sessions.length;
+    $("#ov-review").textContent = all.filter(x => x.needsReview).length;
+    $("#ov-conf").textContent = all.reduce((a, x) => a + x.unresolved, 0);
+  }
+
+  // ====================== Navigation ======================
+  let view = "dashboard", currentSession = null;
+  function show(v) {
+    view = v;
+    document.querySelectorAll(".view").forEach(x => x.classList.toggle("active", x.id === "view-" + v));
+    document.querySelectorAll(".nav button").forEach(b => b.setAttribute("aria-current", (b.dataset.view === v || (v === "conv" && b.dataset.view === "feedback")) ? "page" : "false"));
+    const tb = $("#topbar-right"), crumb = $("#crumb");
+    if (v === "dashboard") { $("#title").textContent = "KPI Dashboard"; crumb.innerHTML = ""; tb.innerHTML = `<span style="font-size:12px;color:var(--muted-fg)" id="range-lbl"></span><div class="seg" id="range"><button data-days="7">7d</button><button data-days="30" aria-pressed="true">30d</button><button data-days="90">90d</button></div><button class="btn"><svg class="i" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg> Refresh</button>`;
+      tb.querySelectorAll("#range button").forEach(b => b.addEventListener("click", () => { tb.querySelectorAll("#range button").forEach(x => x.setAttribute("aria-pressed", "false")); b.setAttribute("aria-pressed", "true"); renderDash(+b.dataset.days); }));
+      renderDash(30);
+    } else if (v === "feedback") { $("#title").textContent = "Policy Owner Feedback"; crumb.innerHTML = ""; tb.innerHTML = `<button class="btn"><svg class="i" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export</button>`; renderList(); }
+    else if (v === "conv") { $("#title").textContent = "Policy Owner Feedback"; crumb.innerHTML = `<span>/</span><span>${currentSession.title}</span>`; tb.innerHTML = `<button class="btn" id="back"><svg class="i" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg> Back to conversations</button>`; $("#back").addEventListener("click", () => show("feedback")); renderConv(); }
+    refreshOverview();
+  }
+  document.querySelectorAll(".nav button").forEach(b => b.addEventListener("click", () => show(b.dataset.view)));
+
+  // ====================== Dashboard ======================
+  function summarize(n) {
+    const sl = daily.slice(-n), prev = daily.slice(-2 * n, -n), sum = (a, k) => a.reduce((x, r) => x + r[k], 0);
+    const s = { sessions: sum(sl, "sessions"), users: Math.round(sum(sl, "users") * (n > 7 ? 0.45 : 0.8)), msgs: sum(sl, "msgs"), auto: sum(sl, "auto"), manual: sum(sl, "manual"), up: sum(sl, "up"), down: sum(sl, "down"),
+      llm: sl.reduce((a, r) => a + r.llm, 0) / n, retr: sl.reduce((a, r) => a + r.retr, 0) / n, tok: sl.reduce((a, r) => a + r.tok, 0) / n, prev: prev.length ? sum(prev, "sessions") : null };
+    s.esc = s.auto + s.manual; s.rate = s.msgs ? s.esc / s.msgs * 100 : 0; s.sat = (s.up + s.down) ? Math.round(s.up / (s.up + s.down) * 100) : null; s.avg = s.sessions ? s.msgs / s.sessions : 0;
+    // verdict distribution from live feedback store within range
+    const since = new Date(today); since.setDate(today.getDate() - n);
+    s.dist = { Correct: 0, Incomplete: 0, "Has Errors": 0, Unclear: 0 }; s.fb = 0;
+    Object.values(feedback).flat().forEach(f => { if (f.created_at >= since) { s.dist[f.verdict]++; s.fb++; } });
+    return { s, sl };
+  }
+  function renderDash(n) {
+    const { s, sl } = summarize(n);
+    $("#range-lbl").textContent = `${fmtD(sl[0].d)} – ${fmtD(sl[sl.length - 1].d)}`;
+    const delta = s.prev ? Math.round((s.sessions - s.prev) / s.prev * 100) : null;
+    const k = [
+      ["Total Sessions", fmtN(s.sessions), delta === null ? "" : `<span style="color:${delta >= 0 ? "var(--good-fg)" : "var(--bad-fg)"};font-weight:600">${delta >= 0 ? "▲" : "▼"} ${Math.abs(delta)}%</span> vs previous period`, "Total number of chatbot conversations started in the selected period"],
+      ["Avg Messages / Session", s.avg.toFixed(1), `${fmtN(s.msgs)} user messages`, "Average number of messages a user sends per conversation"],
+      ["Unique Users", fmtN(s.users), "distinct users", "Number of distinct users who interacted with the chatbot"],
+      ["Escalation Rate", s.rate.toFixed(1) + "%", `${fmtN(s.esc)} of ${fmtN(s.msgs)} messages`, "Percentage of messages that escalated to a practice owner"],
+      ["User Satisfaction", s.sat === null ? "N/A" : s.sat + "%", (s.up + s.down) ? `${fmtN(s.up)} of ${fmtN(s.up + s.down)} ratings` : "No ratings yet", "Percentage of positive ratings (thumbs up) out of all user ratings"],
+      ["Peak Hour", "10 AM", `${fmtN(Math.round(s.msgs * 0.14))} messages · ET`, "Hour with the most chatbot messages (Eastern Time)"],
+    ];
+    $("#kpis").innerHTML = k.map(([l, v, sub, tip]) => `<div class="card kpi"><div class="l">${l} <span class="help" data-tip="${tip}">?</span></div><div class="v">${v}</div><div class="s">${sub}</div></div>`).join("");
+    line($("#c-sess"), sl, "sessions", "#2a78d6", "Sessions", false);
+    sl.forEach(r => r.esc = r.auto + r.manual);
+    line($("#c-esc"), sl, "esc", "#eb6834", "Escalations", true);
+    donut($("#c-donut"), [{ l: "Auto", v: s.auto, c: "#2a78d6" }, { l: "Manual", v: s.manual, c: "#eb6834" }]);
+    const vEl = $("#verdicts");
+    if (!s.fb) vEl.innerHTML = `<div class="empty">No SME feedback data.</div>`;
+    else { const mx = Math.max(...Object.values(s.dist)); vEl.innerHTML = Object.entries(s.dist).map(([a, b]) => `<div class="vrow"><span>${a}</span><div class="bar"><i style="width:${mx ? b / mx * 100 : 0}%"></i></div><span class="n">${b}</span></div>`).join("") + `<p style="margin:8px 0 0;font-size:12px;color:var(--muted-fg)">${s.fb} feedback submissions in period</p>`; }
+    const sec = ms => (ms / 1000).toFixed(2) + "s";
+    $("#perf").innerHTML = [["LLM Response Time", sec(s.llm), "Average time the language model takes to generate a response"], ["Retrieval Time", sec(s.retr), "Average time to retrieve relevant documents from the knowledge base"], ["End-to-End Time", sec(s.llm + s.retr), "Average total time from user query to final response"], ["Avg Tokens / Response", fmtN(Math.round(s.tok)), "Average model tokens consumed per response"]]
+      .map(([l, v, t]) => `<div class="kpi"><div class="l">${l} <span class="help" data-tip="${t}">?</span></div><div class="v">${v}</div></div>`).join("");
+  }
+  function line(el, rows, key, color, lbl, xaxis) {
+    const W = 700, H = xaxis ? 130 : 110, pl = 32, pr = 6, pt = 8, pb = xaxis ? 26 : 8, n = rows.length;
+    const mx = Math.max(1, ...rows.map(r => r[key])), nm = Math.ceil(mx / 5) * 5 || 5;
+    const x = i => pl + (n === 1 ? 0 : i * (W - pl - pr) / (n - 1)), y = v => pt + (H - pt - pb) * (1 - v / nm);
+    let svg = `<svg viewBox="0 0 ${W} ${H}">`;
+    [0, nm / 2, nm].forEach(t => svg += `<line x1="${pl}" x2="${W - pr}" y1="${y(t)}" y2="${y(t)}" stroke="#ececef"/><text x="${pl - 5}" y="${y(t) + 3.5}" font-size="10" fill="#71717a" text-anchor="end">${t}</text>`);
+    svg += `<path d="M${rows.map((r, i) => `${x(i).toFixed(1)},${y(r[key]).toFixed(1)}`).join(" L")}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>`;
+    if (n <= 31) rows.forEach((r, i) => svg += `<circle cx="${x(i)}" cy="${y(r[key])}" r="3" fill="${color}" stroke="#fff" stroke-width="1.5"/>`);
+    if (xaxis) { const ev = n <= 7 ? 1 : n <= 31 ? 5 : 15; rows.forEach((r, i) => { if (i % ev === 0 || i === n - 1) svg += `<text x="${x(i)}" y="${H - 6}" font-size="10" fill="#71717a" text-anchor="middle">${fmtD(r.d)}</text>`; }); }
+    svg += `<text x="${pl}" y="${pt - 1}" font-size="10" fill="#71717a" font-weight="600">${lbl}</text><line class="xh" x1="0" x2="0" y1="${pt}" y2="${H - pb}" stroke="#a1a1aa" stroke-dasharray="3 3" style="display:none"/></svg>`;
+    el.querySelector("svg")?.remove(); el.insertAdjacentHTML("afterbegin", svg);
+    const s = el.querySelector("svg"), tt = el.querySelector(".tt"), xh = s.querySelector(".xh");
+    s.addEventListener("mousemove", e => { const b = s.getBoundingClientRect(), sx = (e.clientX - b.left) / b.width * W, i = Math.max(0, Math.min(n - 1, Math.round((sx - pl) / ((W - pl - pr) / Math.max(1, n - 1)))));
+      xh.style.display = "block"; xh.setAttribute("x1", x(i)); xh.setAttribute("x2", x(i)); tt.style.display = "block"; tt.style.left = x(i) / W * b.width + "px"; tt.style.top = y(rows[i][key]) / H * b.height + "px"; tt.textContent = `${fmtD(rows[i].d)} · ${rows[i][key]} ${lbl.toLowerCase()}`; });
+    s.addEventListener("mouseleave", () => { tt.style.display = "none"; xh.style.display = "none"; });
+  }
+  function donut(el, parts) {
+    const tot = parts.reduce((a, p) => a + p.v, 0); let a0 = -Math.PI / 2, svg = `<svg viewBox="0 0 160 160" style="max-width:170px;margin:0 auto">`;
+    const P = (a, r) => `${(80 + r * Math.cos(a)).toFixed(2)},${(80 + r * Math.sin(a)).toFixed(2)}`;
+    parts.forEach(p => { const a1 = a0 + p.v / tot * Math.PI * 2, big = a1 - a0 > Math.PI ? 1 : 0; svg += `<path d="M${P(a0, 64)} A64,64 0 ${big} 1 ${P(a1, 64)} L${P(a1, 42)} A42,42 0 ${big} 0 ${P(a0, 42)} Z" fill="${p.c}" stroke="#fff" stroke-width="2" data-l="${p.l}" data-v="${p.v}"/>`; a0 = a1; });
+    svg += `<text x="80" y="77" text-anchor="middle" font-size="20" font-weight="600" fill="#09090b">${fmtN(tot)}</text><text x="80" y="93" text-anchor="middle" font-size="10" fill="#71717a">escalations</text></svg>`;
+    el.querySelector("svg")?.remove(); el.insertAdjacentHTML("afterbegin", svg);
+    const tt = el.querySelector(".tt");
+    el.querySelectorAll("path").forEach(p => { p.addEventListener("mousemove", e => { const b = el.getBoundingClientRect(); tt.style.display = "block"; tt.style.left = e.clientX - b.left + "px"; tt.style.top = e.clientY - b.top - 4 + "px"; tt.textContent = `${p.dataset.l}: ${p.dataset.v} (${Math.round(p.dataset.v / tot * 100)}%)`; }); p.addEventListener("mouseleave", () => tt.style.display = "none"); });
+    $("#donut-legend").innerHTML = parts.map(p => `<span style="--c:${p.c}">${p.l} · ${fmtN(p.v)}</span>`).join("");
+  }
+
+  // ====================== Feedback list ======================
+  function statusPill(st) {
+    if (st.unresolved) return `<span class="pill bad">⚠ ${st.unresolved} conflict${st.unresolved > 1 ? "s" : ""}</span>`;
+    if (st.needsReview) return `<span class="pill warn">Needs review</span>`;
+    if (st.feedback_count) return `<span class="pill ok">Reviewed</span>`;
+    return `<span class="pill neutral">No feedback</span>`;
+  }
+  function renderList() {
+    const q = $("#f-q").value.toLowerCase(), days = +$("#f-range").value, rating = $("#f-rating").value, sort = $("#f-sort").value, attn = $("#f-attn").checked;
+    const since = new Date(today); since.setDate(today.getDate() - days);
+    let rows = sessions.map(s => ({ s, st: stats(s) })).filter(({ s, st }) =>
+      s.updated >= since && (!q || s.title.toLowerCase().includes(q) || s.user.toLowerCase().includes(q) || s.session_id.includes(q)) &&
+      (rating === "all" || (rating === "down" && st.down) || (rating === "up" && st.up) || (rating === "none" && st.none === st.response_count)) && (!attn || st.needsReview));
+    rows.sort((a, b) => sort === "down" ? b.st.down - a.st.down : sort === "unrated" ? b.st.none - a.st.none : sort === "conf" ? b.st.unresolved - a.st.unresolved || b.s.updated - a.s.updated : b.s.updated - a.s.updated);
+    $("#f-count").textContent = `${rows.length} conversation${rows.length === 1 ? "" : "s"}`;
+    $("#sess-table tbody").innerHTML = rows.map(({ s, st }) => `
+      <tr class="row" data-id="${s.id}">
+        <td>${s.title}<div class="mono">${s.session_id.slice(0, 8)}…</div></td><td>${s.user}</td><td>${fmtDT(s.updated)}</td>
+        <td class="num">${st.response_count}</td>
+        <td><span class="rate"><span>👍 <b>${st.up}</b></span><span>👎 <b>${st.down}</b></span><span title="Unrated">— <b>${st.none}</b></span></span></td>
+        <td class="num">${st.feedback_count} / ${st.response_count}</td><td>${statusPill(st)}</td>
+      </tr>`).join("") || `<tr><td colspan="7"><div class="empty">No conversations match the current filters.</div></td></tr>`;
+  }
+  ["f-q", "f-range", "f-rating", "f-sort", "f-attn"].forEach(id => $("#" + id).addEventListener("input", renderList));
+  $("#sess-table").addEventListener("click", e => { const tr = e.target.closest("tr.row"); if (!tr) return; currentSession = sessions.find(s => s.id === tr.dataset.id); show("conv"); });
+
+  // ====================== Conversation ======================
+  function renderConv() {
+    const s = currentSession, st = stats(s);
+    $("#thread").innerHTML = s.msgs.map(m => {
+      if (m.role === "user") return `<div class="msg user"><div class="av">${s.user.split(" ").map(x => x[0]).join("")}</div><div class="b"><div class="who">${s.user} · ${fmtDT(m.ts)}</div><div class="txt">${m.content}</div></div></div>`;
+      const fb = feedback[m.id] || [], accepted = fb.find(f => f.accepted), conflict = fb.length > 1 && !accepted;
+      const ratingHtml = m.rating === "thumbs_up" ? `<span class="pill ok">👍 Thumbs up</span>` : m.rating === "thumbs_down" ? `<span class="pill bad">👎 Thumbs down</span>${m.comment ? `<span style="color:var(--muted-fg)">“${m.comment}”</span>` : ""}` : `<span class="pill neutral">Not rated</span>`;
+      const srcHtml = m.sources.length ? `<div class="src"><svg class="i" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Source 1: <a href="#">${m.sources[0].doc_title}</a> › ${m.sources[0].section_title}</div>` : `<div class="src"><span class="pill warn">⚑ Escalation recommended</span> No policy section matched this question.</div>`;
+      const fbHtml = fb.length ? `<div class="fb-box">
+          <div class="ver"><b>Policy owner feedback</b> ${conflict ? `<span class="pill bad">Unresolved conflict · ${fb.length} versions</span>` : accepted ? `<span class="pill ok">Accepted v${accepted.version}</span>` : `<span class="pill info">v${fb[0].version} · ${fb[0].verdict}</span>`}
+            <span style="margin-left:auto"></span>${fb.length ? `<button class="btn sm danger" data-del="${m.id}">Delete all</button>` : ""}</div>
+          ${fb.map(f => `<div class="ver" style="align-items:flex-start"><div style="flex:1">
+              <div class="q"><b>v${f.version}</b> · ${f.verdict} · ${f.created_by} · ${fmtDT(f.created_at)} ${f.accepted ? `<span class="pill ok">accepted</span>` : ""}</div>
+              ${f.verdict !== "Correct" ? `<div class="ans">${f.corrected_answer}</div>` : `<div class="q">No correction needed.</div>`}</div>
+              ${fb.length > 1 ? (f.accepted ? `<button class="btn sm" data-unres="${m.id}">Unresolve</button>` : `<button class="btn sm primary" data-accept="${m.id}" data-v="${f.version}">Accept v${f.version}</button>`) : ""}</div>`).join("")}
+        </div>` : "";
+      return `<div class="msg bot"><div class="av">AI</div><div class="b"><div class="who">EIM Assistant · ${fmtDT(m.ts)}</div><div class="txt">${m.content}${srcHtml}</div>
+        <div class="acts">${ratingHtml}<span style="margin-left:auto"></span><button class="btn sm" data-fb="${m.id}"><svg class="i" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> ${fb.length ? "Add another version" : "Add feedback"}</button></div>${fbHtml}</div></div>`;
+    }).join("");
+    $("#conv-side").innerHTML = `
+      <div class="card"><div class="hd"><h3>Session</h3></div><div class="bd kv">
+        <span>User</span><span>${s.user} <span class="mono">(${s.user_id})</span></span><span>Session ID</span><span class="mono">${s.session_id.slice(0, 13)}…</span>
+        <span>Last activity</span><span>${fmtDT(s.updated)}</span><span>Messages</span><span>${s.msgs.length}</span></div></div>
+      <div class="card"><div class="hd"><h3>Review stats</h3></div><div class="bd kv">
+        <span>Assistant responses</span><b>${st.response_count}</b><span>Thumbs up</span><b>${st.up}</b><span>Thumbs down</span><b>${st.down}</b><span>Unrated</span><b>${st.none}</b>
+        <span>With feedback</span><b>${st.feedback_count}</b><span>Unresolved conflicts</span><b>${st.unresolved}</b></div>
+        <div class="bd" style="padding-top:0">${statusPill(st)}</div></div>
+      <div class="card"><div class="hd"><h3>How corrections work</h3></div><div class="bd" style="font-size:12.5px;color:var(--muted-fg)">A first submission with a verdict other than <b>Correct</b> is immediately added to the assistant's knowledge. A second submission on the same response creates a conflict; nothing changes until a version is accepted.</div></div>`;
+    refreshOverview();
+  }
+  $("#thread").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.fb) openDialog(b.dataset.fb);
+    if (b.dataset.accept) { feedback[b.dataset.accept].forEach(f => f.accepted = f.version === +b.dataset.v); toast(`Accepted version ${b.dataset.v}. The assistant now uses this answer.`); renderConv(); }
+    if (b.dataset.unres) { feedback[b.dataset.unres].forEach(f => f.accepted = false); toast("Conflict marked as unresolved."); renderConv(); }
+    if (b.dataset.del) { delete feedback[b.dataset.del]; toast("All feedback for this response deleted; correction removed from knowledge base."); renderConv(); }
+  });
+
+  // ====================== Dialog ======================
+  let dlgMsg = null;
+  function openDialog(mid) {
+    const m = currentSession.msgs.find(x => x.id === mid), q = currentSession.msgs[currentSession.msgs.indexOf(m) - 1];
+    dlgMsg = m; $("#d-q").value = q.content; $("#d-a").textContent = m.content; $("#d-ans").value = "";
+    document.querySelectorAll("#d-verdict .choice").forEach(c => c.setAttribute("aria-pressed", c.dataset.v === "Incomplete"));
+    $("#dlg").classList.add("open"); $("#d-ans").focus();
+  }
+  document.querySelectorAll("#d-verdict .choice").forEach(c => c.addEventListener("click", () => { document.querySelectorAll("#d-verdict .choice").forEach(x => x.setAttribute("aria-pressed", "false")); c.setAttribute("aria-pressed", "true"); $("#d-ans").disabled = c.dataset.v === "Correct"; }));
+  $("#d-cancel").addEventListener("click", () => $("#dlg").classList.remove("open"));
+  $("#dlg").addEventListener("click", e => { if (e.target === e.currentTarget) $("#dlg").classList.remove("open"); });
+  $("#d-submit").addEventListener("click", () => {
+    const v = document.querySelector('#d-verdict .choice[aria-pressed="true"]').dataset.v, ans = v === "Correct" ? dlgMsg.content : $("#d-ans").value.trim();
+    if (v !== "Correct" && ans.length < 20) { toast("Corrected answer must be at least 20 characters."); return; }
+    const list = feedback[dlgMsg.id] || (feedback[dlgMsg.id] = []);
+    list.push({ feedback_id: Math.random().toString(16).slice(2, 10), version: list.length + 1, verdict: v, user_question: $("#d-q").value, corrected_answer: ans, created_by: "satish.b", created_at: new Date(), accepted: false });
+    $("#dlg").classList.remove("open");
+    toast(list.length > 1 ? `Saved as version ${list.length}. Conflict flagged — accept a version to resolve.` : v === "Correct" ? "Verdict recorded. No correction needed." : "Saved as version 1 and added to the assistant's knowledge.");
+    renderConv();
+  });
+
+  show("dashboard");
+})();
+</script>
+</body>
+</html>
