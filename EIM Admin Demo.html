@@ -239,7 +239,7 @@
         </div>
         <p class="count"><span id="f-count"></span><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="f-attn"> Needs review only</label></p>
         <div class="card"><table id="sess-table">
-          <thead><tr><th>Conversation</th><th>User</th><th>Last activity</th><th class="num">Responses</th><th>User ratings</th><th class="num">Feedback</th><th>Status</th></tr></thead>
+          <thead><tr><th>Conversation</th><th>Rating</th></tr></thead>
           <tbody></tbody>
         </table></div>
       </div>
@@ -461,11 +461,9 @@
     $("#f-count").textContent = `${rows.length} conversation${rows.length === 1 ? "" : "s"}`;
     $("#sess-table tbody").innerHTML = rows.map(({ s, st }) => `
       <tr class="row" data-id="${s.id}">
-        <td>${s.title}<div class="mono">${s.session_id.slice(0, 8)}…</div></td><td>${s.user}</td><td>${fmtDT(s.updated)}</td>
-        <td class="num">${st.response_count}</td>
+        <td>${s.title}<div class="mono">${s.session_id.slice(0, 8)}…</div></td>
         <td><span class="rate"><span>👍 <b>${st.up}</b></span><span>👎 <b>${st.down}</b></span><span title="Unrated">— <b>${st.none}</b></span></span></td>
-        <td class="num">${st.feedback_count} / ${st.response_count}</td><td>${statusPill(st)}</td>
-      </tr>`).join("") || `<tr><td colspan="7"><div class="empty">No conversations match the current filters.</div></td></tr>`;
+      </tr>`).join("") || `<tr><td colspan="2"><div class="empty">No conversations match the current filters.</div></td></tr>`;
   }
   ["f-q", "f-range", "f-rating", "f-sort", "f-attn"].forEach(id => $("#" + id).addEventListener("input", renderList));
   $("#sess-table").addEventListener("click", e => { const tr = e.target.closest("tr.row"); if (!tr) return; currentSession = sessions.find(s => s.id === tr.dataset.id); show("conv"); });
