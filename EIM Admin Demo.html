@@ -97,6 +97,19 @@
   .g-half { grid-template-columns: 1fr 1fr; }
   .chart { position: relative; }
   .chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .chart.fill { flex: 1; min-height: 50px; }
+  .chart.fill svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .card.col { display: flex; flex-direction: column; min-height: 0; }
+  .card.col .bd { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  #view-dashboard.active { display: flex; flex-direction: column; gap: 12px; height: 100%; min-height: 480px; }
+  #view-dashboard .g-trend { flex: 1; min-height: 0; margin-top: 0; }
+  .vtiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .vtile { border: 1px solid var(--border-2); border-radius: 6px; background: var(--bg); padding: 10px 14px; }
+  .vtile .l { font-size: 12px; color: var(--muted-fg); }
+  .vtile .v { font-size: 22px; font-weight: 600; letter-spacing: -.02em; line-height: 1.2; }
+  .vtile .bar { height: 5px; background: var(--muted); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+  .vtile .bar i { display: block; height: 100%; background: var(--s1); }
+  .vfoot { margin: 8px 0 0; font-size: 12px; color: var(--muted-fg); }
   .tt { position: absolute; display: none; pointer-events: none; background: var(--primary); color: #fff; font-size: 11px; padding: 5px 8px; border-radius: 5px; white-space: nowrap; transform: translate(-50%, -120%); z-index: 10; }
   .legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted-fg); margin-top: 8px; }
   .legend span::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; background: var(--c); vertical-align: -1px; }
@@ -204,27 +217,23 @@
       <div class="view active" id="view-dashboard">
         <div class="kpis" id="kpis"></div>
         <div class="grid g-trend">
-          <div class="card">
+          <div class="card col">
             <div class="hd"><h3>Volume trends</h3><p>Sessions started and escalations raised per day</p></div>
             <div class="bd">
-              <div class="chart" id="c-sess"><div class="tt"></div></div>
-              <div class="chart" id="c-esc" style="margin-top:10px"><div class="tt"></div></div>
+              <div class="chart fill" id="c-sess"><div class="tt"></div></div>
+              <div class="chart fill" id="c-esc" style="margin-top:8px"><div class="tt"></div></div>
               <div class="legend"><span style="--c:var(--s1)">Sessions</span><span style="--c:var(--s2)">Escalations</span></div>
             </div>
           </div>
-          <div class="card">
+          <div class="card col">
             <div class="hd"><h3>Escalation split</h3><p>Auto vs manual</p></div>
-            <div class="bd"><div class="chart" id="c-donut"><div class="tt"></div></div><div class="legend" id="donut-legend"></div></div>
+            <div class="bd"><div class="chart fill" id="c-donut"><div class="tt"></div></div><div class="legend" id="donut-legend"></div></div>
           </div>
         </div>
-        <div class="grid g-half">
+        <div class="grid" style="margin-top:0">
           <div class="card">
             <div class="hd"><h3>SME feedback distribution</h3><p>Policy owner verdicts in the period</p></div>
             <div class="bd" id="verdicts"></div>
-          </div>
-          <div class="card">
-            <div class="hd"><h3>System performance</h3><p>Averages over assistant responses</p></div>
-            <div class="bd"><div class="perf" id="perf"></div></div>
           </div>
         </div>
       </div>
@@ -393,7 +402,10 @@
     Object.values(feedback).flat().forEach(f => { if (f.created_at >= since) { s.dist[f.verdict]++; s.fb++; } });
     return { s, sl };
   }
+  let dashDays = 30;
+  window.addEventListener("resize", () => { if (view === "dashboard") renderDash(dashDays); });
   function renderDash(n) {
+    dashDays = n;
     const { s, sl } = summarize(n);
     $("#range-lbl").textContent = `${fmtD(sl[0].d)} – ${fmtD(sl[sl.length - 1].d)}`;
     const delta = s.prev ? Math.round((s.sessions - s.prev) / s.prev * 100) : null;
@@ -412,13 +424,11 @@
     donut($("#c-donut"), [{ l: "Auto", v: s.auto, c: "#2a78d6" }, { l: "Manual", v: s.manual, c: "#eb6834" }]);
     const vEl = $("#verdicts");
     if (!s.fb) vEl.innerHTML = `<div class="empty">No SME feedback data.</div>`;
-    else { const mx = Math.max(...Object.values(s.dist)); vEl.innerHTML = Object.entries(s.dist).map(([a, b]) => `<div class="vrow"><span>${a}</span><div class="bar"><i style="width:${mx ? b / mx * 100 : 0}%"></i></div><span class="n">${b}</span></div>`).join("") + `<p style="margin:8px 0 0;font-size:12px;color:var(--muted-fg)">${s.fb} feedback submissions in period</p>`; }
-    const sec = ms => (ms / 1000).toFixed(2) + "s";
-    $("#perf").innerHTML = [["LLM Response Time", sec(s.llm), "Average time the language model takes to generate a response"], ["Retrieval Time", sec(s.retr), "Average time to retrieve relevant documents from the knowledge base"], ["End-to-End Time", sec(s.llm + s.retr), "Average total time from user query to final response"], ["Avg Tokens / Response", fmtN(Math.round(s.tok)), "Average model tokens consumed per response"]]
-      .map(([l, v, t]) => `<div class="kpi"><div class="l">${l} <span class="help" data-tip="${t}">?</span></div><div class="v">${v}</div></div>`).join("");
+    else vEl.innerHTML = `<div class="vtiles">${Object.entries(s.dist).map(([a, b]) => `<div class="vtile"><div class="l">${a}</div><div class="v">${b}</div><div class="bar"><i style="width:${b / s.fb * 100}%"></i></div></div>`).join("")}</div><p class="vfoot">${s.fb} feedback submissions in period</p>`;
   }
   function line(el, rows, key, color, lbl, xaxis) {
-    const W = 700, H = xaxis ? 130 : 110, pl = 32, pr = 6, pt = 8, pb = xaxis ? 26 : 8, n = rows.length;
+    el.querySelector("svg")?.remove();
+    const W = Math.max(200, el.clientWidth), H = Math.max(50, el.clientHeight), pl = 32, pr = 6, pt = 14, pb = xaxis ? 24 : 6, n = rows.length;
     const mx = Math.max(1, ...rows.map(r => r[key])), nm = Math.ceil(mx / 5) * 5 || 5;
     const x = i => pl + (n === 1 ? 0 : i * (W - pl - pr) / (n - 1)), y = v => pt + (H - pt - pb) * (1 - v / nm);
     let svg = `<svg viewBox="0 0 ${W} ${H}">`;
@@ -426,15 +436,15 @@
     svg += `<path d="M${rows.map((r, i) => `${x(i).toFixed(1)},${y(r[key]).toFixed(1)}`).join(" L")}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>`;
     if (n <= 31) rows.forEach((r, i) => svg += `<circle cx="${x(i)}" cy="${y(r[key])}" r="3" fill="${color}" stroke="#fff" stroke-width="1.5"/>`);
     if (xaxis) { const ev = n <= 7 ? 1 : n <= 31 ? 5 : 15; rows.forEach((r, i) => { if (i % ev === 0 || i === n - 1) svg += `<text x="${x(i)}" y="${H - 6}" font-size="10" fill="#71717a" text-anchor="middle">${fmtD(r.d)}</text>`; }); }
-    svg += `<text x="${pl}" y="${pt - 1}" font-size="10" fill="#71717a" font-weight="600">${lbl}</text><line class="xh" x1="0" x2="0" y1="${pt}" y2="${H - pb}" stroke="#a1a1aa" stroke-dasharray="3 3" style="display:none"/></svg>`;
-    el.querySelector("svg")?.remove(); el.insertAdjacentHTML("afterbegin", svg);
+    svg += `<text x="${pl}" y="${pt - 4}" font-size="10" fill="#71717a" font-weight="600">${lbl}</text><line class="xh" x1="0" x2="0" y1="${pt}" y2="${H - pb}" stroke="#a1a1aa" stroke-dasharray="3 3" style="display:none"/></svg>`;
+    el.insertAdjacentHTML("afterbegin", svg);
     const s = el.querySelector("svg"), tt = el.querySelector(".tt"), xh = s.querySelector(".xh");
     s.addEventListener("mousemove", e => { const b = s.getBoundingClientRect(), sx = (e.clientX - b.left) / b.width * W, i = Math.max(0, Math.min(n - 1, Math.round((sx - pl) / ((W - pl - pr) / Math.max(1, n - 1)))));
       xh.style.display = "block"; xh.setAttribute("x1", x(i)); xh.setAttribute("x2", x(i)); tt.style.display = "block"; tt.style.left = x(i) / W * b.width + "px"; tt.style.top = y(rows[i][key]) / H * b.height + "px"; tt.textContent = `${fmtD(rows[i].d)} · ${rows[i][key]} ${lbl.toLowerCase()}`; });
     s.addEventListener("mouseleave", () => { tt.style.display = "none"; xh.style.display = "none"; });
   }
   function donut(el, parts) {
-    const tot = parts.reduce((a, p) => a + p.v, 0); let a0 = -Math.PI / 2, svg = `<svg viewBox="0 0 160 160" style="max-width:170px;margin:0 auto">`;
+    const tot = parts.reduce((a, p) => a + p.v, 0); let a0 = -Math.PI / 2, svg = `<svg viewBox="0 0 160 160" preserveAspectRatio="xMidYMid meet">`;
     const P = (a, r) => `${(80 + r * Math.cos(a)).toFixed(2)},${(80 + r * Math.sin(a)).toFixed(2)}`;
     parts.forEach(p => { const a1 = a0 + p.v / tot * Math.PI * 2, big = a1 - a0 > Math.PI ? 1 : 0; svg += `<path d="M${P(a0, 64)} A64,64 0 ${big} 1 ${P(a1, 64)} L${P(a1, 42)} A42,42 0 ${big} 0 ${P(a0, 42)} Z" fill="${p.c}" stroke="#fff" stroke-width="2" data-l="${p.l}" data-v="${p.v}"/>`; a0 = a1; });
     svg += `<text x="80" y="77" text-anchor="middle" font-size="20" font-weight="600" fill="#09090b">${fmtN(tot)}</text><text x="80" y="93" text-anchor="middle" font-size="10" fill="#71717a">escalations</text></svg>`;
