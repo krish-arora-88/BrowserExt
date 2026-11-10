@@ -30,10 +30,25 @@ After I approve:
 STEP 3: REPORT
 Lines before and after, what was removed, what you kept and why, and anything you were unsure about.
 
-STANDING RULES (also add these to AGENTS.md at the repo root so they apply to all future work)
-- No new helper/util function unless it's called from 2+ places. Inline it otherwise.
-- No wrapper classes or functions that only forward to another call.
-- No new tables, columns, or models without asking first.
-- Before adding code, search for an existing function that does it.
-- Delete code you make unused.
-- No speculative config options, abstract base classes, or fallbacks for cases that can't happen.
+STEP 4: PRE-COMMIT HOOK AND AGENTS.md
+Make the checks run automatically on every commit, and write the rules down so they apply to all future work.
+1. If `.pre-commit-config.yaml` doesn't exist, create it using the `pre-commit` framework and add `pre-commit` to the dev dependencies.
+2. Add two hooks:
+   - ruff with `--select F401,F841,ERA`
+   - vulture with `--min-confidence 70` and a `vulture_whitelist.py` file
+3. Scope both hooks to ONLY the folders cleaned so far (use `files:` patterns). Each session, add the folder you just cleaned to the scope. Never include an uncleaned folder, or every commit will fail.
+4. Put the KEEP items from Step 1 (the dynamically referenced ones) into `vulture_whitelist.py` with a one-line comment each saying why. Do not whitelist anything else to make the hook pass; delete the code instead.
+5. Run `pre-commit install`, then `pre-commit run --all-files`, and confirm it passes.
+6. Add the install command to the README setup section so the hook is active on fresh clones.
+7. Create `AGENTS.md` at the repo root if it doesn't exist. Add a section titled "Backend code rules" containing exactly the rules below. If the section already exists, leave it as is and don't duplicate it.
+   - No new helper/util function unless it's called from 2+ places. Inline it otherwise.
+   - No wrapper classes or functions that only forward to another call.
+   - No new tables, columns, or models without asking first.
+   - Before adding code, search for an existing function that does it.
+   - Delete code you make unused. Never leave it "for later".
+   - No speculative config options, abstract base classes, or fallbacks for cases that can't happen.
+   - A change should reduce or hold line count unless the feature requires more.
+   - Never bypass the pre-commit hook with `--no-verify`, and never add to `vulture_whitelist.py` without asking.
+8. Commit the hook config and AGENTS.md together, separately from the cleanup commits.
+
+Follow the "Backend code rules" above yourself for the rest of this session and all future ones.
