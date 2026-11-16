@@ -1,0 +1,490 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>EIM Portal Wireframes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+
+:root{--bg:#eceef3;--bar:#ffffff;--fg:#1f2430;--fg2:#4a5160;--line:#cfd4de;--acc:#2a4bb8}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0f1218;--bar:#171b23;--fg:#e9ecf2;--fg2:#aab1c0;--line:#2c3340;--acc:#8aa9ff;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1218;--bar:#171b23;--fg:#e9ecf2;--fg2:#aab1c0;--line:#2c3340;--acc:#8aa9ff;color-scheme:dark}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:Inter,system-ui,sans-serif;overflow:hidden}
+*{box-sizing:border-box}
+#view{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);bottom:calc(56px + env(safe-area-inset-bottom,0px));overflow:hidden}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:820px;transform-origin:0 0}
+.slide{position:absolute;inset:0;width:1280px;height:820px;display:none;align-items:center;justify-content:center;background:#f4f5f8;color:#1f2430;box-shadow:0 2px 24px rgba(0,0,0,.18);overflow:hidden}
+.slide.on{display:flex}
+#bar{position:fixed;left:0;right:0;bottom:0;height:calc(56px + env(safe-area-inset-bottom,0px));padding:0 max(16px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(16px,env(safe-area-inset-left,0px));background:var(--bar);border-top:1px solid var(--line);display:flex;align-items:center;gap:12px}
+#bar button{font:inherit;font-size:14px;font-weight:600;color:var(--fg);background:transparent;border:1.5px solid var(--line);border-radius:8px;height:36px;padding:0 14px;cursor:pointer}
+#bar button:hover:not(:disabled){border-color:var(--acc);color:var(--acc)}
+#bar button:disabled{opacity:.4;cursor:default}
+#bar button:focus-visible,.dots button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+#ttl{font-size:14px;font-weight:600;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;text-align:center}
+#cnt{font-size:13px;color:var(--fg2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.dots{display:flex;gap:6px}
+.dots button{width:12px!important;height:12px!important;padding:0!important;border-radius:50%!important;border:1.5px solid var(--fg2)!important;background:transparent!important}
+.dots button[aria-current="true"]{background:var(--acc)!important;border-color:var(--acc)!important}
+@media (max-width:640px){.dots{display:none}#bar{gap:8px}}
+
+#s1 .pin{display:inline-flex;flex:none;width:24px;height:24px;border-radius:50%;background:#b4350a;color:#fff;font-size:12px;font-weight:700;align-items:center;justify-content:center}
+#s1 .qpin{display:inline-flex;flex:none;width:24px;height:24px;border-radius:50%;background:#fff7e0;border:2px dashed #92400e;color:#7a3508;font-size:13px;font-weight:700;align-items:center;justify-content:center}
+#s1 .tag{font-size:11px;font-weight:700;color:#475069;background:#e3e7f0;border-radius:4px;padding:1px 6px;margin-left:6px;white-space:nowrap}
+#s1 .rolecard{flex:1;min-width:0;background:#fff;border:2px solid #3b4252;border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+#s1 .rh{padding:14px 16px;background:#e6e9ef;border-bottom:1px solid #b9bfcc;display:flex;flex-direction:column;gap:2px}
+#s1 .row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid #e1e4ec;font-size:14px}
+#s1 .on{color:#1c2e66;font-weight:600}
+#s1 .off{color:#5b6376;border:1.5px dashed #aab1c0;border-radius:6px;padding:2px 8px;font-size:12px;white-space:nowrap}
+#s1 .st{font-size:12px;color:#2b3140;text-align:right}
+#s2 .pin{display:inline-flex;flex:none;width:24px;height:24px;border-radius:50%;background:#b4350a;color:#fff;font-size:12px;font-weight:700;align-items:center;justify-content:center}
+#s2 .qpin{display:inline-flex;flex:none;width:24px;height:24px;border-radius:50%;background:#fff7e0;border:2px dashed #92400e;color:#7a3508;font-size:13px;font-weight:700;align-items:center;justify-content:center}
+#s2 .tag{font-size:11px;font-weight:700;color:#475069;background:#e3e7f0;border-radius:4px;padding:1px 6px;margin-left:6px;white-space:nowrap}
+#s2 .app{flex:1;min-width:0;border:2px solid #3b4252;border-radius:10px;background:#fff;overflow:hidden;display:flex;flex-direction:column}
+#s2 .bar{height:36px;background:#e6e9ef;border-bottom:1px solid #b9bfcc;display:flex;align-items:center;gap:6px;padding:0 12px}
+#s2 .dot{width:10px;height:10px;border-radius:50%;background:#b9bfcc}
+#s2 .url{margin-left:12px;flex:1;height:20px;border-radius:10px;background:#fff;border:1px solid #cfd4de;font-size:11px;color:#5b6376;padding:2px 10px}
+#s2 .shell{display:flex;flex:1}
+#s2 .side{width:160px;background:#f1f3f7;border-right:1px solid #cfd4de;padding:14px 10px;display:flex;flex-direction:column;gap:4px}
+#s2 .nav{padding:8px 10px;border-radius:6px;font-size:13px;color:#4a5160}
+#s2 .navon{padding:8px 10px;border-radius:6px;font-size:13px;background:#dfe6f7;color:#1c2e66;font-weight:600}
+#s2 .main{flex:1;min-width:0;padding:20px;display:flex;flex-direction:column;gap:14px}
+#s2 .chip{padding:6px 12px;border-radius:16px;border:1.5px solid #8a92a3;font-size:13px;color:#2b3140;background:#fff}
+#s2 .chipon{padding:6px 12px;border-radius:16px;border:2px solid #2a4bb8;font-size:13px;color:#fff;background:#2a4bb8;font-weight:600}
+#s2 .btn{padding:7px 14px;border-radius:6px;border:1.5px solid #3b4252;font-size:13px;font-weight:600;color:#1f2430;background:#fff;white-space:nowrap}
+#s2 .btnp{padding:7px 14px;border-radius:6px;border:1.5px solid #2a4bb8;font-size:13px;font-weight:600;color:#fff;background:#2a4bb8;white-space:nowrap}
+#s2 .line{height:8px;border-radius:4px;background:#d5d9e2}
+#s2 .leg{width:320px;flex:none;display:flex;flex-direction:column;gap:16px}
+#s2 .lh{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#5b6376}
+#s2 .li{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.45;color:#2b3140}
+#s3 .pin{display:inline-flex;flex:none;width:24px;height:24px;border-radius:50%;background:#b4350a;color:#fff;font-size:12px;font-weight:700;align-items:center;justify-content:center}
+#s3 .qpin{display:inline-flex;flex:none;width:24px;height:24px;border-radius:50%;background:#fff7e0;border:2px dashed #92400e;color:#7a3508;font-size:13px;font-weight:700;align-items:center;justify-content:center}
+#s3 .tag{font-size:11px;font-weight:700;color:#475069;background:#e3e7f0;border-radius:4px;padding:1px 6px;margin-left:6px;white-space:nowrap}
+#s3 .app{flex:1;min-width:0;border:2px solid #3b4252;border-radius:10px;background:#fff;overflow:hidden;display:flex;flex-direction:column}
+#s3 .bar{height:36px;background:#e6e9ef;border-bottom:1px solid #b9bfcc;display:flex;align-items:center;gap:6px;padding:0 12px}
+#s3 .dot{width:10px;height:10px;border-radius:50%;background:#b9bfcc}
+#s3 .url{margin-left:12px;flex:1;height:20px;border-radius:10px;background:#fff;border:1px solid #cfd4de;font-size:11px;color:#5b6376;padding:2px 10px}
+#s3 .shell{display:flex;flex:1}
+#s3 .side{width:160px;background:#f1f3f7;border-right:1px solid #cfd4de;padding:14px 10px;display:flex;flex-direction:column;gap:4px}
+#s3 .nav{padding:8px 10px;border-radius:6px;font-size:13px;color:#4a5160}
+#s3 .navon{padding:8px 10px;border-radius:6px;font-size:13px;background:#dfe6f7;color:#1c2e66;font-weight:600}
+#s3 .main{flex:1;min-width:0;padding:20px;display:flex;flex-direction:column;gap:14px}
+#s3 .btn{padding:6px 12px;border-radius:6px;border:1.5px solid #3b4252;font-size:12px;font-weight:600;color:#1f2430;background:#fff;white-space:nowrap}
+#s3 .btnp{padding:7px 14px;border-radius:6px;border:1.5px solid #2a4bb8;font-size:13px;font-weight:600;color:#fff;background:#2a4bb8;white-space:nowrap}
+#s3 .th{display:flex;padding:8px 12px;background:#e6e9ef;font-size:12px;font-weight:700;color:#4a5160}
+#s3 .tr{display:flex;align-items:center;padding:10px 12px;border-top:1px solid #e1e4ec;font-size:13px}
+#s3 .c1{flex:1;min-width:0}
+#s3 .c2{width:130px}
+#s3 .c3{width:90px}
+#s3 .c4{width:190px;display:flex;gap:6px;align-items:center}
+#s3 .s{display:inline-block;padding:2px 9px;border-radius:12px;font-size:12px;font-weight:600}
+#s3 .live{background:#dff3e6;color:#135c2e}
+#s3 .pend{background:#fff0c9;color:#6b3a06}
+#s3 .old{background:#e6e9ef;color:#3d4556}
+#s3 .leg{width:320px;flex:none;display:flex;flex-direction:column;gap:16px}
+#s3 .lh{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#5b6376}
+#s3 .li{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.45;color:#2b3140}
+#s3 .line{height:8px;border-radius:4px;background:#d5d9e2}
+#s4 .pin{display:inline-flex;flex:none;width:24px;height:24px;border-radius:50%;background:#b4350a;color:#fff;font-size:12px;font-weight:700;align-items:center;justify-content:center}
+#s4 .qpin{display:inline-flex;flex:none;width:24px;height:24px;border-radius:50%;background:#fff7e0;border:2px dashed #92400e;color:#7a3508;font-size:13px;font-weight:700;align-items:center;justify-content:center}
+#s4 .tag{font-size:11px;font-weight:700;color:#475069;background:#e3e7f0;border-radius:4px;padding:1px 6px;margin-left:6px;white-space:nowrap}
+#s4 .app{flex:1;min-width:0;border:2px solid #3b4252;border-radius:10px;background:#fff;overflow:hidden;display:flex;flex-direction:column}
+#s4 .bar{height:36px;background:#e6e9ef;border-bottom:1px solid #b9bfcc;display:flex;align-items:center;gap:6px;padding:0 12px}
+#s4 .dot{width:10px;height:10px;border-radius:50%;background:#b9bfcc}
+#s4 .url{margin-left:12px;flex:1;height:20px;border-radius:10px;background:#fff;border:1px solid #cfd4de;font-size:11px;color:#5b6376;padding:2px 10px}
+#s4 .shell{display:flex;flex:1}
+#s4 .side{width:160px;background:#f1f3f7;border-right:1px solid #cfd4de;padding:14px 10px;display:flex;flex-direction:column;gap:4px}
+#s4 .nav{padding:8px 10px;border-radius:6px;font-size:13px;color:#4a5160}
+#s4 .navon{padding:8px 10px;border-radius:6px;font-size:13px;background:#dfe6f7;color:#1c2e66;font-weight:600}
+#s4 .main{flex:1;min-width:0;padding:20px;display:flex;flex-direction:column;gap:14px}
+#s4 .seg{display:flex;border:1.5px solid #3b4252;border-radius:6px;overflow:hidden;font-size:12px;font-weight:600}
+#s4 .seg span{padding:6px 12px;background:#fff;color:#2b3140}
+#s4 .seg .on{background:#2a4bb8;color:#fff}
+#s4 .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+#s4 .tile{border:1.5px solid #8a92a3;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:4px}
+#s4 .tl{font-size:12px;color:#4a5160;font-weight:600}
+#s4 .tv{font-size:24px;font-weight:700;color:#1f2430}
+#s4 .ts{font-size:11px;color:#4a5160}
+#s4 .th{display:flex;padding:7px 12px;background:#e6e9ef;font-size:12px;font-weight:700;color:#4a5160}
+#s4 .tr{display:flex;align-items:center;padding:7px 12px;border-top:1px solid #e1e4ec;font-size:12px}
+#s4 .k1{flex:1;min-width:0}
+#s4 .k2{width:200px}
+#s4 .k3{width:100px}
+#s4 .ok{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:700;background:#dff3e6;color:#135c2e}
+#s4 .leg{width:320px;flex:none;display:flex;flex-direction:column;gap:16px}
+#s4 .lh{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#5b6376}
+#s4 .li{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.45;color:#2b3140}
+#s5 .pin{display:inline-flex;flex:none;width:24px;height:24px;border-radius:50%;background:#b4350a;color:#fff;font-size:12px;font-weight:700;align-items:center;justify-content:center}
+#s5 .qpin{display:inline-flex;flex:none;width:24px;height:24px;border-radius:50%;background:#fff7e0;border:2px dashed #92400e;color:#7a3508;font-size:13px;font-weight:700;align-items:center;justify-content:center}
+#s5 .tag{font-size:11px;font-weight:700;color:#475069;background:#e3e7f0;border-radius:4px;padding:1px 6px;margin-left:6px;white-space:nowrap}
+#s5 .app{flex:1;min-width:0;border:2px solid #3b4252;border-radius:10px;background:#fff;overflow:hidden;display:flex;flex-direction:column}
+#s5 .bar{height:36px;background:#e6e9ef;border-bottom:1px solid #b9bfcc;display:flex;align-items:center;gap:6px;padding:0 12px}
+#s5 .dot{width:10px;height:10px;border-radius:50%;background:#b9bfcc}
+#s5 .url{margin-left:12px;flex:1;height:20px;border-radius:10px;background:#fff;border:1px solid #cfd4de;font-size:11px;color:#5b6376;padding:2px 10px}
+#s5 .shell{display:flex;flex:1}
+#s5 .side{width:160px;background:#f1f3f7;border-right:1px solid #cfd4de;padding:14px 10px;display:flex;flex-direction:column;gap:4px}
+#s5 .nav{padding:8px 10px;border-radius:6px;font-size:13px;color:#4a5160}
+#s5 .navon{padding:8px 10px;border-radius:6px;font-size:13px;background:#dfe6f7;color:#1c2e66;font-weight:600}
+#s5 .main{flex:1;min-width:0;padding:20px;display:flex;flex-direction:column;gap:14px}
+#s5 .btn{padding:6px 12px;border-radius:6px;border:1.5px solid #3b4252;font-size:12px;font-weight:600;color:#1f2430;background:#fff;white-space:nowrap}
+#s5 .btnp{padding:7px 14px;border-radius:6px;border:1.5px solid #2a4bb8;font-size:13px;font-weight:600;color:#fff;background:#2a4bb8;white-space:nowrap}
+#s5 .th{display:flex;padding:8px 12px;background:#e6e9ef;font-size:12px;font-weight:700;color:#4a5160;gap:12px}
+#s5 .tr{display:flex;align-items:center;padding:9px 12px;border-top:1px solid #e1e4ec;font-size:13px;gap:12px}
+#s5 .q{flex:1;min-width:0}
+#s5 .a{flex:1.3;min-width:0}
+#s5 .sc{width:90px}
+#s5 .ed{width:50px}
+#s5 .line{height:8px;border-radius:4px;background:#d5d9e2}
+#s5 .good{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;font-weight:700;background:#dff3e6;color:#135c2e}
+#s5 .low{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;font-weight:700;background:#fff0c9;color:#6b3a06}
+#s5 .leg{width:320px;flex:none;display:flex;flex-direction:column;gap:16px}
+#s5 .lh{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#5b6376}
+#s5 .li{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.45;color:#2b3140}
+#s6 .pin{display:inline-flex;flex:none;width:24px;height:24px;border-radius:50%;background:#b4350a;color:#fff;font-size:12px;font-weight:700;align-items:center;justify-content:center}
+#s6 .qpin{display:inline-flex;flex:none;width:24px;height:24px;border-radius:50%;background:#fff7e0;border:2px dashed #92400e;color:#7a3508;font-size:13px;font-weight:700;align-items:center;justify-content:center}
+#s6 .tag{font-size:11px;font-weight:700;color:#475069;background:#e3e7f0;border-radius:4px;padding:1px 6px;margin-left:6px;white-space:nowrap}
+#s6 .app{flex:1;min-width:0;border:2px solid #3b4252;border-radius:10px;background:#fff;overflow:hidden;display:flex;flex-direction:column}
+#s6 .bar{height:36px;background:#e6e9ef;border-bottom:1px solid #b9bfcc;display:flex;align-items:center;gap:6px;padding:0 12px}
+#s6 .dot{width:10px;height:10px;border-radius:50%;background:#b9bfcc}
+#s6 .url{margin-left:12px;flex:1;height:20px;border-radius:10px;background:#fff;border:1px solid #cfd4de;font-size:11px;color:#5b6376;padding:2px 10px}
+#s6 .shell{display:flex;flex:1}
+#s6 .side{width:160px;background:#f1f3f7;border-right:1px solid #cfd4de;padding:14px 10px;display:flex;flex-direction:column;gap:4px}
+#s6 .nav{padding:8px 10px;border-radius:6px;font-size:13px;color:#4a5160}
+#s6 .navon{padding:8px 10px;border-radius:6px;font-size:13px;background:#dfe6f7;color:#1c2e66;font-weight:600}
+#s6 .main{flex:1;min-width:0;padding:20px;display:flex;flex-direction:column;gap:14px}
+#s6 .chip{padding:6px 12px;border-radius:16px;border:1.5px solid #8a92a3;font-size:13px;color:#2b3140;background:#fff}
+#s6 .chipon{padding:6px 12px;border-radius:16px;border:2px solid #2a4bb8;font-size:13px;color:#fff;background:#2a4bb8;font-weight:600}
+#s6 .sel{border:1.5px solid #8a92a3;border-radius:6px;padding:7px 12px;font-size:13px;min-width:150px;display:flex;justify-content:space-between;gap:10px;background:#fff}
+#s6 .btnp{padding:8px 16px;border-radius:6px;border:1.5px solid #2a4bb8;font-size:13px;font-weight:600;color:#fff;background:#2a4bb8;white-space:nowrap}
+#s6 .th{display:flex;padding:7px 12px;background:#e6e9ef;font-size:12px;font-weight:700;color:#4a5160;gap:12px}
+#s6 .tr{display:flex;align-items:center;padding:8px 12px;border-top:1px solid #e1e4ec;font-size:12px;gap:12px}
+#s6 .c1{width:110px}
+#s6 .c2{flex:1;min-width:0}
+#s6 .c3{width:80px}
+#s6 .c4{width:90px}
+#s6 .line{height:8px;border-radius:4px;background:#d5d9e2}
+#s6 .leg{width:320px;flex:none;display:flex;flex-direction:column;gap:16px}
+#s6 .lh{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#5b6376}
+#s6 .li{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.45;color:#2b3140}
+</style>
+<div id="view"><div id="stage"><section class="slide on" id="s1" data-title="Who sees what"><div style="width:1280px;height:780px;padding:32px;background:#f4f5f8;display:flex;flex-direction:column;gap:20px">
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#5b6376">Access</div>
+    <div style="font-size:26px;font-weight:700">Who sees what</div>
+    <div style="display:flex;align-items:center;gap:10px;font-size:15px;color:#2b3140"><span class="pin">1</span><span>You sign in with your company login. The login group you belong to decides which of these menus you get. </span></div>
+  </div>
+
+  <div style="display:flex;gap:24px">
+    <div class="rolecard">
+      <div class="rh"><span style="font-weight:700;font-size:16px">EIMO · 1st line of defense</span><span style="font-size:13px;color:#4a5160">Prepares the work</span></div>
+      <div class="row"><span style="color:#5b6376">KPI dashboard</span><span class="off">Not available</span></div>
+      <div class="row"><span class="on">Feedback</span><span class="st">Rate answers, write corrections</span></div>
+      <div class="row"><span class="on">Knowledge base</span><span class="st">Upload and clean up documents</span></div>
+      <div class="row"><span class="on">Golden Q&amp;A</span><span class="st">Add and edit questions</span></div>
+      <div class="row"><span class="on">CSV export</span><span class="st">Download chat data</span></div>
+      <div class="row" style="border-bottom:0"><span style="color:#5b6376">Performance and audit</span><span class="off">Not available</span></div>
+    </div>
+    <div class="rolecard">
+      <div class="rh"><span style="font-weight:700;font-size:16px">EIMO · 2nd line of defense</span><span style="font-size:13px;color:#4a5160">Approves the work</span></div>
+      <div class="row"><span class="on">KPI dashboard</span><span class="st">View</span></div>
+      <div class="row"><span class="on">Feedback</span><span class="st">Also settle conflicts, delete one</span></div>
+      <div class="row"><span class="on">Knowledge base</span><span class="st">Also approve and publish</span></div>
+      <div class="row"><span class="on">Golden Q&amp;A</span><span class="st">Add and edit questions</span></div>
+      <div class="row"><span class="on">CSV export</span><span class="st">Download chat data</span></div>
+      <div class="row" style="border-bottom:0"><span style="color:#5b6376">Performance and audit</span><span class="off">Not available</span></div>
+    </div>
+    <div class="rolecard">
+      <div class="rh"><span style="font-weight:700;font-size:16px">MBO and MDO</span><span style="font-size:13px;color:#4a5160">Oversees, view only</span></div>
+      <div class="row"><span style="color:#5b6376;display:flex;align-items:center;gap:8px">KPI dashboard <span class="qpin">?</span></span><span class="off">Not available</span></div>
+      <div class="row"><span style="color:#5b6376">Feedback</span><span class="off">Not available</span></div>
+      <div class="row"><span style="color:#5b6376">Knowledge base</span><span class="off">Not available</span></div>
+      <div class="row"><span style="color:#5b6376;display:flex;align-items:center;gap:8px">Golden Q&amp;A results <span class="qpin">?</span></span><span class="off">Not available</span></div>
+      <div class="row"><span style="color:#5b6376">CSV export</span><span class="off">Not available</span></div>
+      <div class="row" style="border-bottom:0"><span class="on">Performance and audit</span><span class="st">View only</span></div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:24px">
+    <div style="flex:1;min-width:0;background:#fff;border:1.5px solid #aab1c0;border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px;font-size:14px"><span class="pin">2</span><b>Nobody approves their own work</b></div>
+      <div style="display:flex;align-items:center;gap:10px;font-size:13px">
+        <div style="border:1.5px solid #3b4252;border-radius:6px;padding:6px 10px;background:#dfe6f7">1st line of defense uploads or corrects</div>
+        <span style="font-size:18px">→</span>
+        <div style="border:1.5px solid #3b4252;border-radius:6px;padding:6px 10px;background:#e6e9ef">2nd line of defense approves</div>
+        <span style="font-size:18px">→</span>
+        <div style="border:1.5px solid #3b4252;border-radius:6px;padding:6px 10px">Live</div>
+        <span class="qpin">?</span>
+      </div>
+    </div>
+    <div style="flex:1;min-width:0;background:#fff;border:1.5px solid #aab1c0;border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px;font-size:14px"><span class="pin">3</span><b>Every change is recorded</b></div>
+      <div style="border:1px solid #cfd4de;border-radius:6px;padding:8px 10px;font-size:13px;color:#2b3140;background:#f8f9fb">Correction saved · by [Reviewer name] · Nov 15, 2:14 pm</div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:18px;font-size:13px;color:#2b3140;align-items:center">
+    <span class="qpin">?</span><span>Open: should MBO and MDO also see the KPI dashboard, and where does the MDO review golden Q&amp;A results? Can the approver be the person who submitted?</span>
+  </div>
+</div></section>
+<section class="slide" id="s2" data-title="Feedback on answers"><div style="width:1280px;height:820px;padding:32px;background:#f4f5f8;display:flex;gap:32px;align-items:flex-start">
+  <div class="app" style="height:756px">
+    <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">eim-admin / feedback / conversation</span></div>
+    <div class="shell">
+      <div class="side">
+        <div style="font-size:12px;font-weight:700;color:#5b6376;padding:2px 10px 8px">EIM ADMIN</div>
+        <div class="nav">KPI dashboard</div>
+        <div class="navon">Feedback</div>
+        <div class="nav">Knowledge base</div>
+        <div class="nav">Golden Q&amp;A</div>
+        <div class="nav">Export</div>
+      </div>
+      <div class="main">
+        <div style="font-size:12px;color:#5b6376">Feedback › Conversations › Conversation 1</div>
+        <div style="display:flex;flex-direction:column;gap:8px;border:1.5px solid #cfd4de;border-radius:8px;padding:14px;background:#f8f9fb">
+          <div style="align-self:flex-end;max-width:70%;background:#dfe6f7;border-radius:10px;padding:10px 12px;font-size:13px">Employee question appears here, as it was asked in the chatbot.</div>
+          <div style="max-width:80%;background:#fff;border:1px solid #cfd4de;border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:7px">
+            <span style="font-size:11px;font-weight:700;color:#5b6376">CHATBOT ANSWER</span>
+            <div class="line" style="width:100%"></div><div class="line" style="width:92%"></div><div class="line" style="width:60%"></div>
+          </div>
+        </div>
+
+        <div style="border:2px solid #3b4252;border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;gap:10px"><span class="pin">1</span><b style="font-size:14px">Rate this answer</b></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><span class="chip">Correct</span><span class="chip">Incomplete</span><span class="chipon">Has errors</span><span class="chip">Unclear</span></div>
+          <div style="display:flex;align-items:center;gap:10px"><span class="pin">2</span><b style="font-size:14px">Corrected answer</b><span style="font-size:12px;color:#4a5160">At least 20 characters. Signed with your name.</span></div>
+          <div style="border:1.5px solid #8a92a3;border-radius:6px;padding:10px;min-height:64px;font-size:13px;color:#4a5160;background:#fff">Write the correct answer here.</div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="btnp">Save correction</span><span class="pin">3</span><span style="font-size:13px">Chatbot uses it within minutes</span><span class="qpin">?</span></div>
+        </div>
+
+        <div style="border:1.5px solid #92400e;background:#fff7e0;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px"><span class="pin">4</span><b style="font-size:14px;color:#5c2a05">Two corrections disagree on this answer</b></div>
+          <div style="display:flex;gap:12px">
+            <div style="flex:1;min-width:0;background:#fff;border:1px solid #cfd4de;border-radius:6px;padding:10px;display:flex;flex-direction:column;gap:7px">
+              <span style="font-size:12px;font-weight:700">Version 1 · [Reviewer A]</span><div class="line" style="width:90%"></div><div class="line" style="width:55%"></div>
+              <div style="display:flex;gap:8px;align-items:center"><span class="btn">Accept this one</span></div>
+            </div>
+            <div style="flex:1;min-width:0;background:#fff;border:1px solid #cfd4de;border-radius:6px;padding:10px;display:flex;flex-direction:column;gap:7px">
+              <span style="font-size:12px;font-weight:700">Version 2 · [Reviewer B]</span><div class="line" style="width:85%"></div><div class="line" style="width:65%"></div>
+              <div style="display:flex;gap:8px;align-items:center"><span class="btn">Accept this one</span><span class="btn" style="border-style:dashed">Delete</span><span class="pin">5</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="leg">
+    <div class="lh">Feedback on answers</div>
+    <div class="li"><span class="pin">1</span><span><b>Rate the answer</b> as Correct, Incomplete, Has errors or Unclear. Correct needs nothing more.</span></div>
+    <div class="li"><span class="pin">2</span><span><b>Write the correct answer</b> when it is not Correct. The name comes from your login.</span></div>
+    <div class="li"><span class="pin">3</span><span><b>The chatbot picks up the correction</b> within minutes, without waiting for a document update.</span></div>
+    <div class="li"><span class="qpin">?</span><span><b>Open:</b> does a correction go live straight away and get reviewed after, or only once the second line of defense approves?</span></div>
+    <div class="li"><span class="pin">4</span><span><b>Disagreements are flagged.</b> The second line of defense chooses which version to keep.</span></div>
+    <div class="li"><span class="pin">5</span><span><b>Delete one correction</b> without wiping them all. Second line of defense only.</span></div>
+  </div>
+</div></section>
+<section class="slide" id="s3" data-title="Knowledge base"><div style="width:1280px;height:780px;padding:32px;background:#f4f5f8;display:flex;gap:32px;align-items:flex-start">
+  <div class="app" style="height:716px">
+    <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">eim-admin / knowledge-base</span></div>
+    <div class="shell">
+      <div class="side">
+        <div style="font-size:12px;font-weight:700;color:#5b6376;padding:2px 10px 8px">EIM ADMIN</div>
+        <div class="nav">KPI dashboard</div>
+        <div class="nav">Feedback</div>
+        <div class="navon">Knowledge base</div>
+        <div class="nav">Golden Q&amp;A</div>
+        <div class="nav">Export</div>
+      </div>
+      <div class="main">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:18px;font-weight:700">Knowledge base</div>
+          <div style="display:flex;align-items:center;gap:10px"><span class="pin">1</span><span class="btnp">Upload document</span></div>
+        </div>
+
+        <div style="border:1.5px solid #8a92a3;border-radius:8px;overflow:hidden">
+          <div class="th"><span class="c1">Document</span><span class="c2">Status</span><span class="c3">Updated</span><span class="c4">Action</span></div>
+          <div class="tr"><span class="c1">Document A</span><span class="c2"><span class="s live">Live</span></span><span class="c3">Nov 2</span><span class="c4"><span class="btn">View</span></span></div>
+          <div class="tr" style="background:#fffaf0"><span class="c1">Document B, new version</span><span class="c2"><span class="s pend">Pending review</span></span><span class="c3">Nov 14</span><span class="c4"><span class="btnp" style="padding:6px 10px;font-size:12px">Approve and publish</span><span class="btn">Reject</span></span></div>
+          <div class="tr"><span class="c1">Document B, previous version</span><span class="c2"><span class="s old">Replaced</span></span><span class="c3">Sep 30</span><span class="c4"><span class="btn">Restore</span></span></div>
+        </div>
+        <div style="display:flex;gap:28px;align-items:center;font-size:13px;color:#2b3140;margin-top:-4px"><span style="display:flex;gap:8px;align-items:center"><span class="pin">3</span>Approve and reject: second line of defense only</span><span style="display:flex;gap:8px;align-items:center"><span class="pin">4</span>Only Live documents answer employees</span><span style="display:flex;gap:8px;align-items:center"><span class="pin">5</span>Restore an older version</span></div>
+
+        <div style="border:2px solid #3b4252;border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px"><span class="pin">2</span><b style="font-size:14px">Check the converted text before submitting</b></div>
+          <div style="display:flex;gap:14px">
+            <div style="flex:1;min-width:0;border:1px solid #cfd4de;border-radius:6px;padding:10px;display:flex;flex-direction:column;gap:7px;background:#f8f9fb"><span style="font-size:11px;font-weight:700;color:#5b6376">ORIGINAL FILE</span><div class="line"></div><div class="line" style="width:80%"></div><div style="height:46px;border:1.5px dashed #8a92a3;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#4a5160">Table</div></div>
+            <div style="flex:1;min-width:0;border:1px solid #cfd4de;border-radius:6px;padding:10px;display:flex;flex-direction:column;gap:7px;background:#fff"><span style="font-size:11px;font-weight:700;color:#5b6376">TEXT THE CHATBOT WILL READ</span><div class="line"></div><div class="line" style="width:80%"></div><div style="border:1.5px solid #92400e;background:#fff7e0;border-radius:4px;padding:6px 8px;font-size:12px;color:#5c2a05">The table did not convert. Fix it here.</div></div>
+          </div>
+          <div style="display:flex;gap:8px"><span class="btnp">Submit for approval</span><span class="btn" style="padding:7px 14px;font-size:13px">Save draft</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="leg">
+    <div class="lh">Knowledge base</div>
+    <div class="li"><span class="pin">1</span><span><b>Upload a document.</b> First line of defense or second line of defense.</span></div>
+    <div class="li"><span class="pin">2</span><span><b>Fix conversion problems</b> such as lost tables, then submit it for approval.</span></div>
+    <div class="li"><span class="pin">3</span><span><b>The second line of defense approves and publishes,</b> or rejects. Nothing goes live without it.</span></div>
+    <div class="li"><span class="pin">4</span><span><b>The chatbot answers only from Live documents.</b> Pending ones wait.</span></div>
+    <div class="li"><span class="pin">5</span><span><b>Older versions are kept</b> and can be restored to Live.</span></div>
+  </div>
+</div></section>
+<section class="slide" id="s4" data-title="KPI dashboard"><div style="width:1280px;height:780px;padding:32px;background:#f4f5f8;display:flex;gap:32px;align-items:flex-start">
+  <div class="app" style="height:716px">
+    <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">eim-admin / dashboard</span></div>
+    <div class="shell">
+      <div class="side">
+        <div style="font-size:12px;font-weight:700;color:#5b6376;padding:2px 10px 8px">EIM ADMIN</div>
+        <div class="navon">KPI dashboard</div>
+        <div class="nav">Feedback</div>
+        <div class="nav">Knowledge base</div>
+        <div class="nav">Golden Q&amp;A</div>
+        <div class="nav">Export</div>
+      </div>
+      <div class="main">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:18px;font-weight:700">KPI dashboard <span style="font-size:11px;font-weight:600;color:#4a5160;margin-left:6px">Sample numbers</span></div>
+          <div style="display:flex;align-items:center;gap:10px"><span class="pin">1</span><div class="seg"><span>Weekly</span><span class="on">Monthly</span><span>Quarterly</span></div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px"><span class="pin">2</span><span style="font-size:13px;color:#2b3140">Five usage and quality numbers</span></div>
+        <div class="tiles">
+          <div class="tile"><span class="tl">Unique users</span><span class="tv">412</span><span class="ts">People who started a chat</span></div>
+          <div class="tile"><span class="tl">User satisfaction</span><span class="tv">92%</span><span class="ts">Thumbs up. Target above 90%</span></div>
+          <div class="tile" style="border-color:#b4350a"><span class="tl" style="display:flex;align-items:center;gap:6px">Escalation rate <span class="pin">3</span></span><span class="tv">4.1%</span><span class="ts">Target below 5% · Automatic 2.6% · Manual 1.5%</span></div>
+          <div class="tile"><span class="tl">Messages per session</span><span class="tv">5.2</span><span class="ts">Average questions per chat</span></div>
+          <div class="tile"><span class="tl" style="display:flex;align-items:center;gap:6px">Time per session <span class="qpin">?</span></span><span class="tv">6m 40s</span><span class="ts">What ends a session is open</span></div>
+          <div class="tile" style="gap:6px"><span class="tl">Chats over time</span>
+            <svg viewBox="0 0 160 56" width="100%" height="56" role="img" aria-label="Line chart placeholder"><polyline points="4,44 30,36 56,40 84,22 110,28 136,12 156,16" fill="none" stroke="#3b4252" stroke-width="2"/><line x1="4" y1="52" x2="156" y2="52" stroke="#b9bfcc" stroke-width="1"/></svg>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px"><span class="pin">4</span><span style="font-size:13px;color:#2b3140"><b>Performance checks</b> the model was approved against</span></div>
+        <div style="border:1.5px solid #8a92a3;border-radius:8px;overflow:hidden">
+          <div class="th"><span class="k1">Check</span><span class="k2">Threshold</span><span class="k3">This quarter</span></div>
+          <div class="tr"><span class="k1">User satisfaction</span><span class="k2">Above 90% thumbs up</span><span class="k3"><span class="ok">Meets</span></span></div>
+          <div class="tr"><span class="k1">User activity</span><span class="k2">More than 10 responses</span><span class="k3"><span class="ok">Meets</span></span></div>
+          <div class="tr"><span class="k1">Automatic escalations</span><span class="k2">Below 5%</span><span class="k3"><span class="ok">Meets</span></span></div>
+          <div class="tr"><span class="k1">Golden Q&amp;A similarity</span><span class="k2">Average above 90%</span><span class="k3"><span class="ok">Meets</span></span></div>
+          <div class="tr"><span class="k1">Knowledge base review</span><span class="k2">Documents current</span><span class="k3"><span class="ok">Meets</span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="leg">
+    <div class="lh">KPI dashboard</div>
+    <div class="li"><span class="pin">1</span><span><b>Switch the time period</b> between weekly, monthly and quarterly.</span></div>
+    <div class="li"><span class="pin">2</span><span><b>Five numbers at a glance:</b> unique users, satisfaction, escalation rate, messages per session, time per session.</span></div>
+    <div class="li"><span class="pin">3</span><span><b>Escalations are split</b> into automatic (chatbot not confident) and manual (employee asked for a person).</span></div>
+    <div class="li"><span class="qpin">?</span><span><b>Open:</b> how escalation rate is calculated, and what counts as the end of a session.</span></div>
+    <div class="li"><span class="pin">4</span><span><b>Performance checks</b> show whether each approved threshold is met, so oversight owners can review them and show an auditor.</span></div>
+  </div>
+</div></section>
+<section class="slide" id="s5" data-title="Golden Q&amp;A"><div style="width:1280px;height:800px;padding:32px;background:#f4f5f8;display:flex;gap:32px;align-items:flex-start">
+  <div class="app" style="height:736px">
+    <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">eim-admin / golden-qa</span></div>
+    <div class="shell">
+      <div class="side">
+        <div style="font-size:12px;font-weight:700;color:#5b6376;padding:2px 10px 8px">EIM ADMIN</div>
+        <div class="nav">KPI dashboard</div>
+        <div class="nav">Feedback</div>
+        <div class="nav">Knowledge base</div>
+        <div class="navon">Golden Q&amp;A</div>
+        <div class="nav">Export</div>
+      </div>
+      <div class="main">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:18px;font-weight:700">Golden Q&amp;A</div>
+          <div style="display:flex;align-items:center;gap:10px"><span class="pin">1</span><span class="btnp">Add question</span></div>
+        </div>
+
+        <div style="border:1.5px solid #8a92a3;border-radius:8px;overflow:hidden">
+          <div class="th"><span class="q">Golden question</span><span class="a">Approved answer</span><span class="sc">Last result</span><span class="ed"></span></div>
+          <div class="tr"><div class="q"><div class="line" style="width:90%"></div></div><div class="a"><div class="line" style="width:85%;margin-bottom:5px"></div><div class="line" style="width:50%"></div></div><span class="sc"><span class="good">95%</span></span><span class="ed"><span class="btn">Edit</span></span></div>
+          <div class="tr"><div class="q"><div class="line" style="width:75%"></div></div><div class="a"><div class="line" style="width:92%;margin-bottom:5px"></div><div class="line" style="width:40%"></div></div><span class="sc"><span class="good">93%</span></span><span class="ed"><span class="btn">Edit</span></span></div>
+          <div class="tr"><div class="q"><div class="line" style="width:82%"></div></div><div class="a"><div class="line" style="width:80%;margin-bottom:5px"></div><div class="line" style="width:60%"></div></div><span class="sc"><span class="low">86%</span></span><span class="ed"><span class="btn">Edit</span></span></div>
+        </div>
+
+        <div style="display:flex;gap:14px">
+          <div style="flex:1;min-width:0;border:2px solid #3b4252;border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:10px"><span class="pin">2</span><b style="font-size:14px">Runs on a schedule</b><span class="qpin">?</span></div>
+            <div style="font-size:13px;color:#2b3140">Last run: [date]<br>Next run: [date]</div>
+            <div style="font-size:12px;color:#4a5160">Every question is put to the chatbot and its answer is compared with the approved one.</div>
+          </div>
+          <div style="flex:1;min-width:0;border:2px solid #3b4252;border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:10px"><span class="pin">3</span><b style="font-size:14px">Result of the last run</b></div>
+            <div style="font-size:24px;font-weight:700">91% <span style="font-size:12px;font-weight:600;color:#4a5160">average similarity</span></div>
+            <div style="height:10px;border-radius:5px;background:#e1e4ec;position:relative"><div style="width:91%;height:10px;border-radius:5px;background:#2a4bb8"></div><div style="position:absolute;left:90%;top:-4px;width:2px;height:18px;background:#1f2430"></div></div>
+            <div style="font-size:12px;color:#4a5160">Target: above 90% (marked line)</div>
+          </div>
+        </div>
+
+        <div style="border:2px solid #3b4252;border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px"><span class="pin">4</span><b style="font-size:14px">MDO review</b><span class="qpin">?</span></div>
+          <div style="display:flex;gap:14px;align-items:flex-start">
+            <div style="flex:1;min-width:0;border:1.5px solid #8a92a3;border-radius:6px;padding:10px;min-height:56px;font-size:13px;color:#4a5160">Reviewer notes on the results</div>
+            <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start;font-size:12px;color:#2b3140"><span>Reviewed by [name] on [date]</span><span class="btnp">Mark as reviewed</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="leg">
+    <div class="lh">Golden Q&amp;A</div>
+    <div class="li"><span class="pin">1</span><span><b>Add and edit golden questions</b> and their approved answers right in the portal.</span></div>
+    <div class="li"><span class="pin">2</span><span><b>The set runs on a regular schedule.</b> Each question is asked of the chatbot and the answer is compared with the approved one.</span></div>
+    <div class="li"><span class="qpin">?</span><span><b>Open:</b> how often it runs. The Nov 9 meeting said quarterly, the validation report said annually.</span></div>
+    <div class="li"><span class="pin">3</span><span><b>The result shows against the 90% target,</b> with low-scoring questions flagged.</span></div>
+    <div class="li"><span class="pin">4</span><span><b>The MDO reviews the results manually</b> and marks them reviewed.</span></div>
+    <div class="li"><span class="qpin">?</span><span><b>Open:</b> the access table gives MBO and MDO no view of golden Q&amp;A results today, so where this review happens needs confirming.</span></div>
+  </div>
+</div></section>
+<section class="slide" id="s6" data-title="Data export"><div style="width:1280px;height:600px;padding:32px;background:#f4f5f8;display:flex;gap:32px;align-items:flex-start">
+  <div class="app" style="height:536px">
+    <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">eim-admin / export</span></div>
+    <div class="shell">
+      <div class="side">
+        <div style="font-size:12px;font-weight:700;color:#5b6376;padding:2px 10px 8px">EIM ADMIN</div>
+        <div class="nav">KPI dashboard</div>
+        <div class="nav">Feedback</div>
+        <div class="nav">Knowledge base</div>
+        <div class="nav">Golden Q&amp;A</div>
+        <div class="navon">Export</div>
+      </div>
+      <div class="main">
+        <div style="font-size:18px;font-weight:700">Export chat data</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="pin">1</span><span class="chip">Past week</span><span class="chipon">Past month</span><span class="chip">Past 3 months</span><span class="chip">Custom dates</span></div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="pin">2</span><span class="sel"><span>Thumbs: All</span><span>▾</span></span><span class="sel"><span>Escalated: All</span><span>▾</span></span></div>
+        <div style="display:flex;align-items:center;gap:10px"><span class="pin">3</span><span class="btnp">Download CSV</span><span style="font-size:12px;color:#4a5160">Every question and answer in the filter, unedited</span><span class="qpin">?</span></div>
+        <div style="border:1.5px solid #8a92a3;border-radius:8px;overflow:hidden">
+          <div class="th"><span class="c1">Date</span><span class="c2">Question and answer</span><span class="c3">Thumbs</span><span class="c4">Escalated</span></div>
+          <div class="tr"><span class="c1">Nov 12</span><div class="c2"><div class="line" style="width:80%"></div></div><span class="c3">Up</span><span class="c4">No</span></div>
+          <div class="tr"><span class="c1">Nov 12</span><div class="c2"><div class="line" style="width:65%"></div></div><span class="c3">Down</span><span class="c4">Automatic</span></div>
+          <div class="tr"><span class="c1">Nov 13</span><div class="c2"><div class="line" style="width:72%"></div></div><span class="c3">None</span><span class="c4">Manual</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="leg">
+    <div class="lh">Data export</div>
+    <div class="li"><span class="pin">1</span><span><b>Pick a time range:</b> past week, month, three months, or custom dates.</span></div>
+    <div class="li"><span class="pin">2</span><span><b>Narrow it</b> by thumbs up or down, and by whether the chat was escalated.</span></div>
+    <div class="li"><span class="pin">3</span><span><b>Download everything as a CSV file.</b> Available to the first and second line of defense only.</span></div>
+    <div class="li"><span class="qpin">?</span><span><b>Open:</b> who may export raw chat data, and whether the usual AI governance review applies.</span></div>
+  </div>
+</div></section></div></div><div id="bar"><button id="prev" type="button" aria-label="Previous page">&larr; Back</button><div class="dots" id="dots"></div><div id="ttl"></div><div id="cnt"></div><button id="next" type="button" aria-label="Next page">Next &rarr;</button></div>
+<script>
+(function(){
+var slides=[].slice.call(document.querySelectorAll('.slide')),n=slides.length,cur=0;
+var stage=document.getElementById('stage'),view=document.getElementById('view');
+var ttl=document.getElementById('ttl'),cnt=document.getElementById('cnt'),prev=document.getElementById('prev'),next=document.getElementById('next'),dots=document.getElementById('dots');
+slides.forEach(function(s,i){var b=document.createElement('button');b.type='button';b.setAttribute('aria-label','Go to page '+(i+1)+': '+s.getAttribute('data-title').replace(/&amp;/g,'&'));b.onclick=function(){go(i)};dots.appendChild(b)});
+function fit(){var w=view.clientWidth,h=view.clientHeight,k=Math.min(w/1280,h/820);stage.style.transform='scale('+k+') translate(-50%,-50%)'}
+function go(i){cur=Math.max(0,Math.min(n-1,i));slides.forEach(function(s,j){s.classList.toggle('on',j===cur)});
+ ttl.innerHTML=slides[cur].getAttribute('data-title');cnt.textContent=(cur+1)+' / '+n;prev.disabled=cur===0;next.disabled=cur===n-1;
+ [].forEach.call(dots.children,function(d,j){if(j===cur)d.setAttribute('aria-current','true');else d.removeAttribute('aria-current')});
+ try{history.replaceState(null,'','#slide-'+(cur+1))}catch(e){}}
+prev.onclick=function(){go(cur-1)};next.onclick=function(){go(cur+1)};
+document.addEventListener('keydown',function(e){if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){e.preventDefault();go(cur+1)}else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(cur-1)}else if(e.key==='Home')go(0);else if(e.key==='End')go(n-1)});
+var x0=null;view.addEventListener('touchstart',function(e){x0=e.touches[0].clientX},{passive:true});
+view.addEventListener('touchend',function(e){if(x0===null)return;var d=e.changedTouches[0].clientX-x0;if(Math.abs(d)>50)go(cur+(d<0?1:-1));x0=null},{passive:true});
+document.addEventListener('click',function(e){var a=e.target.closest('[data-go]');if(a){e.preventDefault();go(parseInt(a.getAttribute('data-go'),10)-1)}});
+window.addEventListener('resize',fit);
+var m=/^#slide-(\d+)$/.exec(location.hash||'');fit();go(m?parseInt(m[1],10)-1:0);
+})();
+</script>
+</html>
