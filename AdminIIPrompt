@@ -1,0 +1,125 @@
+I'll check the EIM source and pipeline docs first so the prompt matches the real stack.
+
+**Use multiple prompts: one read-only audit session, then one session per screen, each ending in one PR.** A single phased prompt would have the model at medium effort carrying five features in one long context, where later phases drift and you get one PR too big to review line by line. Separate sessions also let you answer the open questions between slices instead of letting Devin guess.
+
+I haven't used Devin's harness directly, so check the session mechanics (attachments, how it asks questions) against how your team runs it. The prompts are written from the code and requirements in this project.
+
+Attach `EIM_Admin_Portal_Wireframes_Slides.html` to every session, because Devin can't open the private artifact link.
+
+## Session 0: audit and brief (no code changes)
+
+```
+You are working in the nfr0-eim-ai-chatbot repo, on branch feat/admin-dashboard. This session is read-only apart from two new docs files. Do not change application code.
+
+Context: we are building the admin portal for the EIM AI Chatbot, a RAG chatbot that answers employees' questions about Enterprise Issue Management policy. The portal is used by a small group of policy owners and model-oversight staff, never by normal chatbot users. The attached HTML file holds the agreed wireframes (5 slides: access, feedback and export, knowledge base, KPI dashboard, golden Q&A). The wireframes define what each screen must do; their numbers are sample data and their styling is not a design spec. Use the repo's existing components and styling.
+
+What I know about the repo, from partial screenshots, so verify each point:
+- Frontend: React + TypeScript + Vite, react-router, TanStack Query, Tailwind, lucide icons. /admin is gated by AdminRoute (user.is_admin) and authConfig.admin_enabled. AdminPage.tsx is a placeholder showing total sessions.
+- Backend: FastAPI. routers/admin.py (GET /api/v1/admin/sessions, behind require_admin and FEATURE_ADMIN_ENABLED), routers/metrics.py (GET /api/v1/metrics with summary and daily), feedback schemas in schemas.py (verdict, corrected answer, versions, conflict, accepted version), KB routes (/kb/upload, /kb/approve/{catalogue_id}/{version}, GET /kb/catalogue, GET and PUT catalogue content).
+- Tests: pytest with TestClient and dependency_overrides (see tests/test_admin_router.py).
+- system_prompt.txt and config.py have uncommitted local changes that belong to other work. Never modify, stage, or commit them.
+
+Roles the portal needs (today the code only has is_admin):
+- 1st line of defense: submit feedback, upload and clean KB documents, golden Q&A, CSV export. No KPI dashboard.
+- 2nd line of defense: everything the 1st line can do, plus KPI dashboard, approve/publish/reject/remove KB documents, resolve feedback conflicts, delete a single feedback item.
+- MBO and MDO: view KPI dashboard, view all KB documents read-only, golden Q&A. No feedback, no export.
+It is still undecided whether 1st and 2nd line are two roles or one, so the design must be a capability map (role -> set of permissions) where merging them is a config change.
+
+Do this:
+1. Read the frontend and backend and write docs/admin-portal/AUDIT.md: for each wireframe screen, list every capability it shows, whether a backend endpoint exists for it (path, method, auth dependency), whether a frontend client function exists, and what is missing. Mark anything you could not confirm in code as unconfirmed.
+2. In the same file, describe how auth works today: where is_admin comes from, what the SAML login returns, and whether group or role claims are available to map to the three roles. If the claims are not visible in code, say so; do not assume.
+3. List the repo conventions a new screen must follow: folder layout, API client pattern, query key pattern, UI component library, test layout, lint and type-check commands, how to run frontend and backend locally.
+4. Write docs/admin-portal/BRIEF.md: the context, roles and constraints above, corrected by what you found, so later sessions can read it instead of this prompt.
+5. Propose a build order as a list of PR-sized slices, with what each depends on.
+
+Finish with a short message: the gaps that need a backend change, and the questions only I can answer. Open one PR containing only the two docs files.
+```
+
+## Sessions 1 to 5: one per slice
+
+Paste the shared header, then one slice body.
+
+**Shared header**
+
+```
+Repo: nfr0-eim-ai-chatbot. Read docs/admin-portal/BRIEF.md and docs/admin-portal/AUDIT.md first; they hold the context, roles and repo conventions. The attached HTML has the wireframes; build what the named slide shows, using the repo's existing components and styling, not the wireframe's look.
+
+Rules for this session:
+- Build only the slice below. If something outside it looks wrong, note it in the PR description and leave it.
+- Enforce every permission on the backend; hiding a button in the UI is not access control. Take the acting user's identity from the login session, never from the request body.
+- Reuse existing endpoints and schemas where the audit says they exist. Where a backend change is needed, keep it minimal and add pytest tests in the existing style, including a test that each role that should be refused gets 403.
+- No mock or hardcoded data in shipped code. If an endpoint the screen needs does not exist and is out of this slice, stop and tell me.
+- Never modify, stage or commit system_prompt.txt or config.py's existing local changes.
+- If a requirement is ambiguous or conflicts with the code, ask me before building. A wrong guess costs more than a question.
+- Before opening the PR: run lint, type-check and the full test suite, then run the app locally and exercise the screen once as each role. In the PR description, state what you ran and saw, and what you could not verify.
+- One PR, branched from feat/admin-dashboard.
+```
+
+**Slice 1: roles and portal shell (slide "Who sees what")**
+
+```
+Slice: roles and the portal shell.
+- Add the capability map from the brief (role -> permissions) on the backend, exposed to the frontend through the existing auth/user response. Keep 1st and 2nd line as separate roles that can be merged by config.
+- Replace require_admin on admin routes with per-capability dependencies; keep FEATURE_ADMIN_ENABLED behaviour and the existing tests passing.
+- Frontend: an admin layout with a side menu (KPI dashboard, Feedback, Knowledge base, Golden Q&A) that shows only the menus the user's role allows, nested routes under /admin with placeholder pages, and a redirect to the first page the role can see.
+- How a login maps to a role depends on what the audit found about SAML claims. If that mapping is not confirmed in AUDIT.md, ask me before implementing it, and give local test users one of each role.
+```
+
+**Slice 2: feedback and export (slide "Feedback and export")**
+
+```
+Slice: feedback review and CSV export.
+- Sessions list from GET /api/v1/admin/sessions (response count, thumbs up/down, feedback count, unresolved conflicts), opening a conversation view.
+- Per chatbot answer: rate it (Correct, Incomplete, Has Errors, Unclear, matching the backend's spelling) and, unless Correct, write a corrected answer of at least 20 characters. The submitter's name comes from the login.
+- Conflicts: when an answer has more than one feedback version, show them side by side. Only the 2nd line can accept one version or delete a single feedback item. Single-item delete does not exist in the backend today; add it.
+- Export: a panel at the top of the Feedback page that downloads chat data as CSV, filtered by time range, thumbs up/down, and escalated or not. 1st and 2nd line only.
+- Still undecided: whether a correction goes live immediately or only after 2nd-line approval. Keep today's backend behaviour and do not build an approval step.
+```
+
+**Slice 3: knowledge base (slide "Knowledge base")**
+
+```
+Slice: knowledge base management.
+- Document table from the catalogue with status (Pending review, Live, Replaced), updated date and actions.
+- Upload a document (1st or 2nd line), then a side-by-side check of the original against the converted markdown, with the markdown editable (existing GET/PUT content endpoints), then submit for approval.
+- 2nd line only: approve and publish, reject, and remove a Live document so the chatbot stops using it. An older version becomes Replaced only once the new version is approved, and a Replaced version can be restored to Live.
+- MBO and MDO see every document read-only.
+- Approval re-embeds the document in one transaction and can take a while or fail; show progress and a clear failure state, and leave the row pending on failure as the backend does.
+- Reject, remove-from-Live and restore may not exist in the backend; check AUDIT.md and add what is missing.
+```
+
+**Slice 4: KPI dashboard (slide "KPI dashboard")**
+
+```
+Slice: KPI dashboard, visible to the 2nd line, MBO and MDO.
+- Weekly / Monthly / Quarterly switch driving the date range sent to GET /api/v1/metrics.
+- Tiles, each showing the value, the counts behind any percentage, and how it is calculated:
+  - Unique users: each person counted once per selected period.
+  - User satisfaction: thumbs up / (thumbs up + thumbs down). Target above 90%.
+  - Escalation rate: manual escalations / sessions. Manual only.
+  - Messages per session.
+  - AI confidence: responses where the model set escalation_required (auto_escalations) / all responses. Target below 5%.
+  - Golden Q&A similarity: average from the latest golden run. Target above 90%. Show an empty state until slice 5 exists.
+  - Knowledge base review: date the documents were last updated.
+  - Chats over time, from the daily breakdown.
+- Tiles with a target show whether it is met.
+- If the metrics endpoint lacks a field a tile needs (for example a response count for the AI confidence denominator), add it to the backend with tests instead of approximating in the frontend.
+```
+
+**Slice 5: golden Q&A (slide "Golden Q&A")**
+
+```
+Slice: golden Q&A. There is no backend for this yet, so start by sending me a short design (tables, endpoints, how a run is executed and scored) and wait for my go-ahead before writing code.
+- All three roles can add and edit golden questions with approved answers, and see results.
+- A run puts each question to the chatbot through the real chat pipeline in a fresh session and scores the answer's similarity to the approved answer. Show per-question scores, the average against the 90% target, and flag low scorers.
+- The 2nd line reviews a run manually: notes, plus "reviewed by [name] on [date]" taken from the login.
+- Scheduling is undecided (quarterly or annually), so build a manual "Run now" and store runs so a scheduler can be added later.
+- The existing set is 42 questions in Golden Q-A.xlsx; provide a one-off import.
+- How the existing similarity score is computed is unconfirmed (it looks like ada-002 cosine between golden answer and response). Find it in the repo or ask me; do not invent a scoring method.
+```
+
+## Before you start
+
+- **Role mapping:** nothing in the code I've seen shows how a login becomes 1st line, 2nd line or MBO/MDO. Session 0 will tell you whether SAML group claims exist; if not, that's a question for Satish before slice 1.
+- **Order:** slice 1 must merge first. Slices 2 to 4 can then run in parallel, and slice 5 goes last because the dashboard tile depends on it.
+- **Open questions:** the 1st/2nd line split, correction go-live timing and run frequency are all written so the build doesn't block on them, but each will need a follow-up change once decided.
