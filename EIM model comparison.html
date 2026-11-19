@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EIM chatbot: GPT-5 vs Haiku 5.5 vs Sonnet 5.5 (escalate rather than hallucinate)</title>
+<style>
+  :root { --ink:#1a1f2b; --muted:#5b6475; --line:#dde2ea; --bg:#f6f8fb; --card:#fff;
+          --good:#1b7a46; --bad:#b3261e; --warn:#a15c00; --blue:#1f4fd8; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+         color:var(--ink); background:var(--bg); }
+  main { max-width:980px; margin:0 auto; padding:20px 16px 48px; }
+  h1 { font-size:1.45rem; margin:0 0 4px; }
+  h2 { font-size:1.15rem; margin:28px 0 10px; }
+  .sub { color:var(--muted); font-size:.9rem; margin-bottom:16px; }
+  .box { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin:12px 0; }
+  .priority { border-left:5px solid var(--blue); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; }
+  .card h3 { margin:0 0 2px; font-size:1.05rem; }
+  .tag { display:inline-block; font-size:.75rem; padding:2px 8px; border-radius:99px; border:1px solid var(--line);
+         color:var(--muted); margin-bottom:8px; }
+  ul { margin:6px 0 10px; padding-left:20px; }
+  li { margin:3px 0; }
+  .pro li::marker { color:var(--good); content:"+ "; font-weight:700; }
+  .con li::marker { color:var(--bad); content:"– "; font-weight:700; }
+  .lab { font-weight:700; font-size:.85rem; text-transform:uppercase; letter-spacing:.04em; margin-top:8px; }
+  .lab.p { color:var(--good); } .lab.c { color:var(--bad); } .lab.u { color:var(--warn); }
+  .scroll { overflow-x:auto; }
+  table { border-collapse:collapse; width:100%; min-width:620px; background:var(--card); font-size:.92rem; }
+  th, td { border:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:top; }
+  th { background:#eef2f8; }
+  .m { color:var(--good); font-weight:600; } .o { color:var(--blue); font-weight:600; } .n { color:var(--warn); font-weight:600; }
+  .small { font-size:.85rem; color:var(--muted); }
+  .verdict { background:#fff8e6; border:1px solid #f0d58a; border-radius:12px; padding:14px 16px; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>EIM chatbot: GPT-5 vs Haiku 5.5 vs Sonnet 5.5</h1>
+<div class="sub">Pros and cons when the goal is <b>escalate rather than hallucinate</b> · Nov 19, 2026 · Hitesh Malhotra · Based on one run per model, 43 golden questions, reseeded local KB (script 07 output)</div>
+
+<div class="box priority">
+  <b>The standard used here.</b> A good escalation happens when the retrieved sources do not support an answer. A wrong confident answer is worse than an unnecessary escalation, so <b>missed escalations</b> (answering when it should have escalated) and <b>unsupported claims</b> count most against a model. Fewer escalations is <b>not</b> a pro. Neither has been measured yet: nobody has labelled which questions are answerable from the sources.
+</div>
+
+<h2>Bottom line (provisional)</h2>
+<div class="verdict">
+  <b>No model can be called safest yet.</b> The data only shows <i>how often</i> each escalates, not whether it was right. On behavior alone, <b>Sonnet and GPT-5 lean cautious</b> (21 and 19 escalations) and <b>Haiku is the one to verify</b>: it answered Q2 and Q22 where both others escalated, and those answers could be good coverage or hallucinations. Haiku is also the most transparent when it does escalate (it states what the sources do not cover). Haiku also has a latency problem to rule in or out.
+  <br><br>
+  <b>Decision rule to agree with the manager:</b> a model passes only if (1) it has no more missed escalations than GPT-5, (2) it has zero fact contradictions, (3) its unsupported-claim rate is no higher than GPT-5's. Pick between passing models on false escalations, latency and cost.
+</div>
+
+<h2>Side by side</h2>
+<div class="scroll">
+<table>
+  <tr><th>Measure</th><th>GPT-5 (new KB)</th><th>Haiku 5.5</th><th>Sonnet 5.5</th><th>Evidence</th></tr>
+  <tr><td>Escalated, of 43</td><td>19</td><td>17</td><td>21</td><td class="m">Measured</td></tr>
+  <tr><td>Escalation text</td><td>Canned only (19)</td><td>Partial answer + what is not covered (14 of 17); canned 3</td><td>Canned only (21)</td><td class="m">Measured</td></tr>
+  <tr><td>Questions where it differs</td><td>Escalates Q2, Q22 (like Sonnet)</td><td><b>Answers Q2, Q22</b></td><td><b>Escalates Q3, Q15</b> (others answer)</td><td class="m">Measured</td></tr>
+  <tr><td>Missed escalations (answered, sources did not support it)</td><td>Not yet known</td><td>Not yet known; check Q2, Q22</td><td>Not yet known</td><td class="n">Not measured</td></tr>
+  <tr><td>False escalations (answerable but escalated)</td><td>Not yet known</td><td>Not yet known</td><td>Not yet known; check Q3, Q15</td><td class="n">Not measured</td></tr>
+  <tr><td>Unsupported claims / contradicted facts</td><td>Not yet known</td><td>Not yet known</td><td>Not yet known</td><td class="n">Not measured</td></tr>
+  <tr><td>Flag matches the text</td><td>Canned text with flag True</td><td>Needs a check (hedged text must carry flag True)</td><td>Canned text with flag True</td><td class="o">Partly observed</td></tr>
+  <tr><td>Follows the prompt's escalation rule</td><td>Unknown</td><td>Unknown: partial answers on escalation may break the rule</td><td>Unknown</td><td class="n">Not checked</td></tr>
+  <tr><td>Content vs GPT-5 when both answer (cosine, paired)</td><td>baseline</td><td>-0.0001 (CI -0.0034 to +0.0036), n=24</td><td>+0.0003 (CI -0.0043 to +0.0047), n=22</td><td class="m">Measured (weak signal)</td></tr>
+  <tr><td>Citation errors</td><td>0</td><td>0</td><td>0</td><td class="m">Measured</td></tr>
+  <tr><td>Latency median / p90 / max (s)</td><td>7.6 / 9.7 / 12.1</td><td>7.8 / <b>40.4 / 72.2</b></td><td>8.1 / 11.2 / 13.8</td><td class="m">Measured</td></tr>
+  <tr><td>Cost per question</td><td>Not measured</td><td>Not measured</td><td>Not measured</td><td class="n">Not measured</td></tr>
+</table>
+</div>
+<p class="small">Escalation counts, citation and latency figures are from script 07. The new-KB GPT-5 run escalates about twice as often as the old GPT-5 baseline (9 of 43), so the KB (or run-to-run variance) matters as much as the model.</p>
+
+<h2>Per model</h2>
+<div class="grid">
+
+<div class="box card">
+  <h3>GPT-5 (comparator, being deprecated)</h3>
+  <span class="tag">Escalates 19 of 43</span>
+  <div class="lab p">Pros</div>
+  <ul class="pro">
+    <li>Cautious: it escalates on 19 questions and gives no partial guess.</li>
+    <li>Steady latency (p90 9.7 s, max 12.1 s).</li>
+    <li>No citation errors; the SME preferred its earlier responses.</li>
+  </ul>
+  <div class="lab c">Cons</div>
+  <ul class="con">
+    <li>Escalation message is canned, so the user learns nothing about what the sources cover.</li>
+    <li>Escalations doubled versus its own baseline; part may be noise or the KB, not caution.</li>
+    <li>Whether its answers are all supported by the sources has not been checked.</li>
+    <li>Being deprecated, so it is only the yardstick.</li>
+  </ul>
+</div>
+
+<div class="box card">
+  <h3>Haiku 5.5</h3>
+  <span class="tag">Escalates 17 of 43</span>
+  <div class="lab p">Pros</div>
+  <ul class="pro">
+    <li>Most useful escalations: says what the sources do cover and what is not covered, then sets the escalate flag (14 of 17).</li>
+    <li>Content equals GPT-5's when both answer (cosine difference about 0).</li>
+    <li>No citation errors.</li>
+    <li>Probably the cheapest (not measured).</li>
+  </ul>
+  <div class="lab c">Cons</div>
+  <ul class="con">
+    <li>Answered Q2 and Q22 where GPT-5 and Sonnet escalated: possible missed escalations until checked against the sources.</li>
+    <li>Partial answers on escalation may break the system prompt's escalation rule, and could reach users as if they were confirmed.</li>
+    <li>Latency tail: p90 40.4 s, max 72.2 s.</li>
+  </ul>
+  <div class="lab u">To verify</div>
+  <ul>
+    <li>Q2, Q22: do the sources support its answers?</li>
+    <li>Does every hedged answer carry the escalate flag?</li>
+    <li>Does the 40–72 s tail repeat?</li>
+  </ul>
+</div>
+
+<div class="box card">
+  <h3>Sonnet 5.5</h3>
+  <span class="tag">Escalates 21 of 43</span>
+  <div class="lab p">Pros</div>
+  <ul class="pro">
+    <li>Most conservative by count: the least likely to give an unsupported confident answer (to be confirmed).</li>
+    <li>Content equals GPT-5's when both answer (cosine difference about 0).</li>
+    <li>Steady latency (p90 11.2 s, max 13.8 s); no citation errors.</li>
+  </ul>
+  <div class="lab c">Cons</div>
+  <ul class="con">
+    <li>Escalated Q3 and Q15, which GPT-5 and Haiku answered: false escalations if the sources support an answer.</li>
+    <li>Canned message only; the user gets no partial help.</li>
+    <li>Likely the most expensive (not measured).</li>
+  </ul>
+  <div class="lab u">To verify</div>
+  <ul>
+    <li>Q3, Q15: are they answerable from the sources?</li>
+  </ul>
+</div>
+
+</div>
+
+<h2>What would settle it (about 14 questions, an hour)</h2>
+<div class="box">
+  <ol>
+    <li><b>Model disagreements:</b> Q2, Q3, Q11, Q15, Q22, Q42.</li>
+    <li><b>Shared new escalations the baseline answered:</b> Q4, Q18, Q23, Q28, Q30, Q31, Q34, Q43. These are only wrong if the sources support an answer; missing documents could make them correct escalations.</li>
+    <li>For each, read the retrieved sources (or the golden answer) and label it Answerable, Partial or Not answerable. Then mark each model's behavior: justified escalation, false escalation, missed escalation, or supported answer.</li>
+    <li>For every answer given, check each stated fact against the sources (unsupported claims, contradictions).</li>
+    <li>Repeat each model at least twice (temperature is not set) so one-question differences are not mistaken for real ones.</li>
+  </ol>
+  <p class="small">Script 08 builds the scoring workbook (`answerable`, critical facts, hits, contradictions); its summary sheet counts false and missed escalations per model.</p>
+</div>
+
+<h2>Caveats</h2>
+<div class="box">
+  <ul>
+    <li>One run per model and 43 questions: differences of 1–3 questions can be noise.</li>
+    <li>The reseeded KB is not the baseline KB (GPT-5 escalations went from 9 to 19). Some baseline-cited documents may be absent from the new KB.</li>
+    <li>Cosine to the reference cannot detect a wrong fact, and the reference is mostly GPT-5's own earlier output.</li>
+    <li>Cost, hallucination rate and prompt-rule compliance are not measured yet.</li>
+  </ul>
+</div>
+
+</main>
+</body>
+</html>
