@@ -1,14 +1,11 @@
-Go with A, but do it properly:
-1. Don't hardcode runAsUser anywhere (base or overlays).
-2. In deploy.yaml securityContext, make sure these are set (add only if missing):
-   runAsNonRoot: true
-   allowPrivilegeEscalation: false
-   capabilities: { drop: ["ALL"] }
-   These are UID-agnostic and pass the restricted SCC.
-3. Add a .snyk ignore for SNYK-CC-K8S-11 scoped to deploy.yaml only, with:
-   reason: "OpenShift restricted SCC assigns a non-root UID from each namespace's range at admission; hardcoding runAsUser breaks admission across dev/qat/uat/prod."
-   expires: 6 months from today
-4. Show me the diff before committing.
+Fix before merge:
+1. Delete ldap_auth_service.py. Grep for any imports/references and check the Dockerfile doesn't copy repo-root scripts into the image. Show me the result.
+2. Tell me what AD group / user type maps to `first_line`. Then add a SESSIONS_VIEW_ALL permission, grant it only to the EIMO admin role, and gate /api/v1/admin and get_owned_session_or_404's cross-user path on it instead of FEEDBACK_SUBMIT. Add a test proving first_line and model_oversight get 403.
+3. Change the login rate-limit key from user:<name> to ip+user. Don't build distributed limiting — keep in-memory, but note the per-pod limitation in the PR description.
+4. Check ocp/ route config: does the OpenShift router append X-Forwarded-For? Report what you find, don't change code yet.
+5. Rename AuthContext.mode "saml" to "session" and update docstrings. Make saml_role_groups reuse _role_map.
+6. Move package.json, package-lock.json and .snyk changes to a separate branch chore/snyk-dependency-fixes. Reword the WIP commit.
+Then run backend tests and show me the diff. Don't push.
 
 
 
