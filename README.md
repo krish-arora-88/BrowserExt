@@ -1,4 +1,28 @@
+Go with A, but do it properly:
+1. Don't hardcode runAsUser anywhere (base or overlays).
+2. In deploy.yaml securityContext, make sure these are set (add only if missing):
+   runAsNonRoot: true
+   allowPrivilegeEscalation: false
+   capabilities: { drop: ["ALL"] }
+   These are UID-agnostic and pass the restricted SCC.
+3. Add a .snyk ignore for SNYK-CC-K8S-11 scoped to deploy.yaml only, with:
+   reason: "OpenShift restricted SCC assigns a non-root UID from each namespace's range at admission; hardcoding runAsUser breaks admission across dev/qat/uat/prod."
+   expires: 6 months from today
+4. Show me the diff before committing.
+
+
+
+
+
+
+
+
+
+
 # TASK: Build backend_v2 for Anchor AI from scratch
+
+
+
 
 You are building a brand-new backend in a new top-level folder `backend_v2/`.
 The existing `backend/` is over-engineered and is NOT a reference for structure.
