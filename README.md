@@ -1,11 +1,36 @@
-Fix before merge:
-1. Delete ldap_auth_service.py. Grep for any imports/references and check the Dockerfile doesn't copy repo-root scripts into the image. Show me the result.
-2. Tell me what AD group / user type maps to `first_line`. Then add a SESSIONS_VIEW_ALL permission, grant it only to the EIMO admin role, and gate /api/v1/admin and get_owned_session_or_404's cross-user path on it instead of FEEDBACK_SUBMIT. Add a test proving first_line and model_oversight get 403.
-3. Change the login rate-limit key from user:<name> to ip+user. Don't build distributed limiting — keep in-memory, but note the per-pod limitation in the PR description.
-4. Check ocp/ route config: does the OpenShift router append X-Forwarded-For? Report what you find, don't change code yet.
-5. Rename AuthContext.mode "saml" to "session" and update docstrings. Make saml_role_groups reuse _role_map.
-6. Move package.json, package-lock.json and .snyk changes to a separate branch chore/snyk-dependency-fixes. Reword the WIP commit.
-Then run backend tests and show me the diff. Don't push.
+Read-only first. Do not edit or commit anything until I approve.
+
+GOAL
+Add LDAP username/password as an extra login option for NON-PROD (dev) environments only. Microsoft SSO stays exactly as it is and stays the only login in PROD, because SSO only works in PROD. LDAP is a developer convenience. It is not the default and it does not replace anything.
+
+REFERENCE SCRIPT
+`ldap_auth_service.py` (or wherever it is on disk) is a reference only. Everything I need is already in it: the LDAP bind/lookup logic, the config values and the user mapping. Read it fully. If it's not on this branch, it's in the working tree of my previous branch. Read it from there and do not copy it into the repo.
+
+HARD RULES
+- Do NOT commit, push, stash, or create branches. I'll review and commit myself.
+- Write the minimum code needed. No refactors, renames, formatting changes, or "while I'm here" fixes.
+- Do NOT add: rate limiting, lockout, a default auth mode, an AUTH_MODE setting, new roles/permissions, a new DB migration, schema changes, or new environment variables.
+- Do NOT touch: Microsoft SSO code, session handling, admin routes, frontend styling, package.json, .snyk, or ocp/.
+- Reuse existing patterns. The repo already has a non-SSO local login (/auth/test/login, local_login_enabled). Follow how that is wired in the backend, in /api/v1/auth/config, and in the frontend login page, and add LDAP the same way. Don't invent new patterns.
+- LDAP login must not work in PROD. Gate it using the existing IS_PROD flag (or equivalent). Don't add a new setting for this.
+- If something in the script needs a new env var or new dependency, STOP and ask me. Don't add it.
+
+STEP 1: PLAN (no edits)
+Show me:
+1. What the script does, step by step, in plain language.
+2. Which parts are needed and which should be left out (anything about rate limiting, its own FastAPI server or port, extra logging, etc.).
+3. The exact files and functions you'll change, and how the LDAP option will appear next to Microsoft SSO on the login page.
+4. Whether a new dependency (like ldap3) is already in requirements. If it isn't, say so.
+Wait for my approval.
+
+STEP 2: IMPLEMENT (after I approve)
+- Make the smallest change that works. Show me the diff when you're done.
+- Run the existing tests and lint only. Don't write new test suites.
+- Passwords must never be logged. Don't put raw login input in log lines.
+
+STEP 3: CLEANUP
+- Delete ldap_auth_service.py and any other reference-only files at the end. Confirm with `git status` that it's gone and that nothing from it is imported anywhere.
+- Report `git status` and `git diff --stat`. Leave everything uncommitted.
 
 
 
