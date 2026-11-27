@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PolyBot Verification Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: one narrow reading column; the pipeline is a row of four stages that
+   stacks on phones; every section answers one question in its heading. */
+:root{
+  --bg:#f4f6fb; --surface:#ffffff; --ink:#101a33; --muted:#566180; --line:#d8deec;
+  --accent:#1f4fd8; --accent-soft:#e7edfd;
+  --content:#1f4fd8; --context:#6b46c1; --ux:#0b7a75;
+  --good:#1a7f4b; --good-soft:#e3f4ea; --bad:#c0362c; --bad-soft:#fbe9e6; --warm:#b56a00; --warm-soft:#fdf1dc;
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0c1222; --surface:#141c33; --ink:#e8ecf8; --muted:#9ba7c6; --line:#27335a;
+    --accent:#86a6ff; --accent-soft:#1b274d;
+    --content:#86a6ff; --context:#b9a0ff; --ux:#5fd0c9;
+    --good:#5fd39a; --good-soft:#12301f; --bad:#ff8f80; --bad-soft:#3a1814; --warm:#f0b34a; --warm-soft:#33260c;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0c1222; --surface:#141c33; --ink:#e8ecf8; --muted:#9ba7c6; --line:#27335a;
+  --accent:#86a6ff; --accent-soft:#1b274d;
+  --content:#86a6ff; --context:#b9a0ff; --ux:#5fd0c9;
+  --good:#5fd39a; --good-soft:#12301f; --bad:#ff8f80; --bad-soft:#3a1814; --warm:#f0b34a; --warm-soft:#33260c;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55}
+main{max-width:1040px;margin:0 auto;padding:32px 18px 72px;display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(2rem,6vw,3.1rem);font-weight:700;letter-spacing:-.02em}
+h2{font-size:clamp(1.35rem,3.6vw,1.8rem);font-weight:700}
+h3{font-size:1.05rem;font-weight:600}
+p{margin:0}
+.eyebrow{font-family:var(--mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lede{font-size:1.1rem;color:var(--muted);max-width:62ch}
+.sec-head{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.sec-head p{color:var(--muted);max-width:66ch}
+header{display:flex;flex-direction:column;gap:14px}
+
+/* tags */
+.tag{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid currentColor}
+.tag::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.t-content{color:var(--content)} .t-context{color:var(--context)} .t-ux{color:var(--ux)}
+
+/* three things to test */
+.tests{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.test{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;border-top:4px solid currentColor}
+.test h3,.test p{color:var(--ink)} .test p{color:var(--muted);font-size:.95rem}
+
+/* pipeline */
+.pipe{display:grid;grid-template-columns:repeat(4,1fr);gap:34px}
+.stage{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 16px;display:flex;flex-direction:column;gap:10px;transition:border-color .4s,box-shadow .4s,transform .4s}
+.stage .num{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
+.stage p{font-size:.93rem;color:var(--muted)}
+.stage ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.stage li{font-size:.9rem;padding:8px 10px;border-radius:10px;background:var(--bg);border:1px solid var(--line)}
+.stage li b{display:block;font-weight:600;color:var(--ink)}
+.stage li span{color:var(--muted)}
+.feeds{margin-top:auto;font-family:var(--mono);font-size:.72rem;color:var(--muted);border-top:1px dashed var(--line);padding-top:10px}
+.stage.on{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);transform:translateY(-3px)}
+.stage.on .num{color:var(--accent)}
+/* animated connector */
+.stage:not(:last-child)::after{content:"";position:absolute;top:50%;right:-34px;width:34px;height:2px;
+  background:repeating-linear-gradient(90deg,var(--accent) 0 6px,transparent 6px 12px);background-size:12px 2px;animation:flow-x .7s linear infinite}
+.stage:not(:last-child)::before{content:"";position:absolute;top:calc(50% - 5px);right:-36px;border:6px solid transparent;border-left-color:var(--accent);z-index:1}
+@keyframes flow-x{to{background-position:12px 0}}
+@keyframes flow-y{to{background-position:0 12px}}
+.loop{margin-top:18px;display:flex;gap:12px;align-items:center;padding:12px 16px;border:1px dashed var(--accent);border-radius:14px;background:var(--accent-soft);font-size:.95rem}
+.loop svg{flex:none;animation:spin 6s linear infinite}
+@keyframes spin{to{transform:rotate(-360deg)}}
+
+/* checks */
+.checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.check{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.check header{flex-direction:row;align-items:center;justify-content:space-between;gap:8px}
+.check .n{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
+.check p{font-size:.93rem;color:var(--muted)}
+.check dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:.88rem}
+.check dt{font-family:var(--mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding-top:2px}
+.check dd{margin:0}
+.check.extra{border-style:dashed}
+.chain{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-family:var(--mono);font-size:.74rem}
+.chain span{padding:3px 8px;border-radius:6px;background:var(--accent-soft);color:var(--accent)}
+.chain i{font-style:normal;color:var(--muted)}
+
+/* example */
+.example{display:grid;grid-template-columns:1.15fr 1fr;gap:18px;align-items:start}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.turn{display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:.92rem}
+.turn .who{grid-column:1/-1;font-family:var(--mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.bubble{padding:10px 12px;border-radius:12px;background:var(--bg);border:1px solid var(--line)}
+.bubble small{display:block;font-family:var(--mono);font-size:.68rem;color:var(--muted);margin-bottom:4px}
+mark{background:var(--bad-soft);color:var(--bad);padding:0 3px;border-radius:4px;font-weight:600}
+.results{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.results li{display:grid;grid-template-columns:26px 1fr;gap:10px;align-items:start;padding:9px 10px;border-radius:10px;border:1px solid var(--line);font-size:.9rem;transition:background .3s,border-color .3s}
+.results .ico{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:.8rem;font-weight:700;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.results b{display:block} .results span{color:var(--muted)}
+.results li.pass .ico{background:var(--good-soft);color:var(--good);border-color:var(--good)}
+.results li.fail{background:var(--bad-soft);border-color:var(--bad)}
+.results li.fail .ico{background:var(--bad);color:var(--surface);border-color:var(--bad)}
+.results li.wait .ico{animation:pulse .7s ease-in-out infinite alternate}
+.results li.idle{opacity:.55}
+@keyframes pulse{to{background:var(--accent-soft);border-color:var(--accent)}}
+.verdict{padding:12px 14px;border-radius:12px;background:var(--warm-soft);color:var(--warm);font-weight:600;border:1px solid var(--warm);transition:opacity .3s}
+.verdict.hide{opacity:.25}
+.note{font-size:.82rem;color:var(--muted)}
+button{font:inherit;font-weight:600;cursor:pointer;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:var(--surface);padding:9px 14px;align-self:flex-start}
+button:hover{filter:brightness(1.08)}
+button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+
+/* scoring */
+.score{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.formula{font-family:var(--mono);font-size:.9rem;display:flex;flex-wrap:wrap;align-items:center;gap:8px;overflow-x:auto;padding:4px 0}
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle}
+.frac span{padding:2px 8px;white-space:nowrap}
+.frac span:first-child{border-bottom:1.5px solid var(--ink)}
+.routes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.routes li{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:baseline;font-size:.93rem}
+.pill{font-family:var(--mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.p-good{background:var(--good-soft);color:var(--good)} .p-warm{background:var(--warm-soft);color:var(--warm)} .p-bad{background:var(--bad-soft);color:var(--bad)}
+.open{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;max-width:70ch}
+.open li::marker{color:var(--accent)}
+footer{font-size:.82rem;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+
+/* reveal: resting state is visible; the class only plays an entrance */
+.in{animation:rise .6s cubic-bezier(.2,.7,.2,1) both}
+@keyframes rise{from{opacity:.25;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+@media (max-width:860px){
+  .pipe{grid-template-columns:1fr;gap:34px}
+  .stage:not(:last-child)::after{top:auto;right:auto;bottom:-34px;left:28px;width:2px;height:34px;
+    background:repeating-linear-gradient(180deg,var(--accent) 0 6px,transparent 6px 12px);background-size:2px 12px;animation-name:flow-y}
+  .stage:not(:last-child)::before{top:auto;right:auto;bottom:-38px;left:23px;border:6px solid transparent;border-top-color:var(--accent)}
+  .stage.on{transform:none}
+  .tests,.example,.score{grid-template-columns:1fr}
+}
+@media (max-width:460px){.turn{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <span class="eyebrow">Quest case competition · PolyBot Agent</span>
+  <h1>How PolyBot checks every language</h1>
+  <p class="lede">A daily job samples conversations in French, Cantonese and Mandarin, runs seven automatic checks on each one against its English version, and sends only the suspicious ones to a human.</p>
+</header>
+
+<section aria-labelledby="h-tests">
+  <div class="sec-head">
+    <span class="eyebrow">What we test</span>
+    <h2 id="h-tests">Three things have to hold in every language</h2>
+  </div>
+  <div class="tests">
+    <div class="test t-content reveal"><span class="tag">Content</span><h3>The facts survive</h3><p>Numbers, banking terms and meaning are the same as in English. Nothing is dropped or added.</p></div>
+    <div class="test t-context reveal"><span class="tag">Context</span><h3>The thread holds</h3><p>Who said what, in what order, and what the conversation was about all stay intact.</p></div>
+    <div class="test t-ux reveal"><span class="tag">User experience</span><h3>It reads as native</h3><p>Right language, right tone, no stray English, and names handled the way a client expects.</p></div>
+  </div>
+</section>
+
+<section aria-labelledby="h-flow">
+  <div class="sec-head">
+    <span class="eyebrow">Flow and architecture</span>
+    <h2 id="h-flow">Four stages, with one feedback loop</h2>
+    <p>Conversations enter on the left and leave on the right as either a pass or a case for a human reviewer.</p>
+  </div>
+  <div class="pipe" id="pipe">
+    <article class="stage on">
+      <span class="num">01 · COLLECT</span>
+      <h3>Gather conversations</h3>
+      <ul>
+        <li><b>Daily sample</b><span>A scheduled job grabs a set % of conversation pairs (original + English) from each language.</span></li>
+        <li><b>Scenario runs</b><span>PolyBot generates test scenarios and a simulated customer chats with the bot, to cover paths real traffic has not hit.</span></li>
+      </ul>
+      <div class="feeds">IN: transcripts · English test cases · language packs</div>
+    </article>
+    <article class="stage">
+      <span class="num">02 · VERIFY</span>
+      <h3>Run the checks</h3>
+      <p>Seven rule-based methods compare the original with its English translation. An LLM judge then reads what rules cannot: tone, context and the summary.</p>
+      <div class="feeds">IN: banking glossary · English reference answers</div>
+    </article>
+    <article class="stage">
+      <span class="num">03 · SCORE</span>
+      <h3>Turn checks into a metric</h3>
+      <p>Each check returns pass or flag plus a score. They roll up into one score per conversation and one parity number per language against English.</p>
+      <div class="feeds">OUT: score per conversation · parity per language</div>
+    </article>
+    <article class="stage">
+      <span class="num">04 · ROUTE</span>
+      <h3>Pass, or send to a human</h3>
+      <p>Clean conversations are logged to the dashboard. Anything suspicious goes to a native-speaking reviewer with the reason highlighted.</p>
+      <div class="feeds">OUT: dashboard · review queue · release gate</div>
+    </article>
+  </div>
+  <div class="loop">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="color:var(--accent)"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/></svg>
+    <span><b>Feedback loop.</b> Reviewer verdicts flow back to stage 02 to tune thresholds and calibrate the judge, so fewer cases need a human over time.</span>
+  </div>
+</section>
+
+<section aria-labelledby="h-checks">
+  <div class="sec-head">
+    <span class="eyebrow">Inside stage 02 · the translation layer</span>
+    <h2 id="h-checks">Seven checks, plus a judge for what rules miss</h2>
+    <p>No single method is trusted alone. Each one catches a different kind of error.</p>
+  </div>
+  <div class="checks">
+    <article class="check reveal"><header><span class="n">01</span><span class="tag t-content">Content</span></header><h3>Completeness</h3><p>No sentence is dropped or merged away.</p><dl><dt>How</dt><dd>Align sentences between original and translation, then compare counts and lengths.</dd><dt>Catches</dt><dd>A missing disclosure or a skipped reply.</dd></dl></article>
+    <article class="check reveal"><header><span class="n">02</span><span class="tag t-content">Content</span></header><h3>Back-translation</h3><div class="chain"><span>translate back</span><i>→</i><span>semantic similarity</span><i>→</i><span>metric</span></div><dl><dt>How</dt><dd>Translate the English back to the source language and compare embeddings with the original.</dd><dt>Catches</dt><dd>Meaning that drifted. Weak on tone and small number changes, so it never runs alone.</dd></dl></article>
+    <article class="check reveal"><header><span class="n">03</span><span class="tag t-content">Content</span></header><h3>Key banking words</h3><p>Banking terms map to the approved equivalent.</p><dl><dt>How</dt><dd>Glossary lookup both ways, such as CELI ↔ TFSA and 按揭 ↔ mortgage.</dd><dt>Catches</dt><dd>Wrong product names. Important keywords are flagged for human review.</dd></dl></article>
+    <article class="check reveal"><header><span class="n">04</span><span class="tag t-content">Content</span></header><h3>Numbers and entities</h3><p>Every amount, rate, date and phone number matches exactly.</p><dl><dt>How</dt><dd>Extract them from both sides with patterns and compare the sets.</dd><dt>Catches</dt><dd>The highest-risk error: a changed figure.</dd></dl></article>
+    <article class="check reveal"><header><span class="n">05</span><span class="tag t-context">Context</span></header><h3>Speaker attribution</h3><p>Each line belongs to the same speaker in both versions.</p><dl><dt>How</dt><dd>Compare speaker labels and turn order line by line.</dd><dt>Catches</dt><dd>A customer's words shown as the bot's, or turns out of order.</dd></dl></article>
+    <article class="check reveal"><header><span class="n">06</span><span class="tag t-ux">Experience</span></header><h3>Untranslated leftovers</h3><p>No source-language text is left in the English, and no English in the reply.</p><dl><dt>How</dt><dd>Language detection on every sentence, plus a script check for Chinese.</dd><dt>Catches</dt><dd>Half-translated lines and English fallback.</dd></dl></article>
+    <article class="check reveal"><header><span class="n">07</span><span class="tag t-content">Content</span></header><h3>Names and departments</h3><p>Proper nouns are kept or mapped to their official name, never translated literally.</p><dl><dt>How</dt><dd>A protected list of people, product and department names.</dd><dt>Catches</dt><dd>A department name turned into a meaningless phrase.</dd></dl></article>
+    <article class="check extra reveal"><header><span class="n">+ JUDGE</span><span class="tag t-ux">Context · Experience</span></header><h3>LLM judge</h3><p>Reads the original directly and answers narrow questions with quoted evidence.</p><dl><dt>How</dt><dd>Fixed rubric, structured output, calibrated against native reviewers.</dd><dt>Catches</dt><dd>Wrong tone or formality, lost context across turns, a summary that misstates the chat.</dd></dl></article>
+  </div>
+</section>
+
+<section aria-labelledby="h-ex">
+  <div class="sec-head">
+    <span class="eyebrow">Worked example · illustrative, not real data</span>
+    <h2 id="h-ex">One French conversation going through the checks</h2>
+    <p>Each run works on three outputs: the original transcript, its English translation, and an English summary of the conversation.</p>
+  </div>
+  <div class="example">
+    <div class="panel reveal">
+      <div class="turn"><span class="who">Customer</span>
+        <div class="bubble"><small>FRENCH TRANSCRIPT</small>J'ai perdu ma carte de crédit.</div>
+        <div class="bubble"><small>ENGLISH TRANSLATION</small>I lost my credit card.</div>
+      </div>
+      <div class="turn"><span class="who">Bot</span>
+        <div class="bubble"><small>FRENCH TRANSCRIPT</small>Je bloque votre carte tout de suite. Votre nouvelle carte arrivera dans <mark>5</mark> jours ouvrables.</div>
+        <div class="bubble"><small>ENGLISH TRANSLATION</small>I'm blocking your card right away. Your new card will arrive in <mark>7</mark> business days.</div>
+      </div>
+      <div class="bubble"><small>ENGLISH SUMMARY</small>Customer reported a lost credit card. The bot blocked it and said a replacement arrives in 7 business days.</div>
+    </div>
+    <div class="panel reveal">
+      <ul class="results" id="results">
+        <li class="pass"><span class="ico">✓</span><div><b>Completeness</b><span>3 sentences in, 3 out</span></div></li>
+        <li class="pass"><span class="ico">✓</span><div><b>Back-translation</b><span>High similarity. The meaning looks fine.</span></div></li>
+        <li class="pass"><span class="ico">✓</span><div><b>Key banking words</b><span>carte de crédit → credit card</span></div></li>
+        <li class="fail"><span class="ico">!</span><div><b>Numbers and entities</b><span>5 in the original, 7 in the translation</span></div></li>
+        <li class="pass"><span class="ico">✓</span><div><b>Speaker attribution</b><span>Customer, bot, in the same order</span></div></li>
+        <li class="pass"><span class="ico">✓</span><div><b>Untranslated leftovers</b><span>None found</span></div></li>
+        <li class="pass"><span class="ico">✓</span><div><b>Names and departments</b><span>None in this chat</span></div></li>
+      </ul>
+      <div class="verdict" id="verdict">Flagged for human review: a financial fact changed.</div>
+      <p class="note">Back-translation passed while the number check failed. That is why the checks run together.</p>
+      <button type="button" id="replay">Replay the checks</button>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="h-score">
+  <div class="sec-head">
+    <span class="eyebrow">Stages 03 and 04</span>
+    <h2 id="h-score">How a conversation is scored and routed</h2>
+  </div>
+  <div class="score">
+    <div class="panel reveal">
+      <h3>Score</h3>
+      <div class="formula">Score = 0.5 × Content + 0.3 × Context + 0.2 × Experience</div>
+      <div class="formula">Parity<sub>L</sub> = <span class="frac"><span>average Score in language L</span><span>average Score in English</span></span></div>
+      <p class="note">Weights are a starting proposal. Parity of 1.0 means the language performs as well as English.</p>
+    </div>
+    <div class="panel reveal">
+      <h3>Route</h3>
+      <ul class="routes">
+        <li><span class="pill p-good">Pass</span><span>All checks clean. Logged to the dashboard.</span></li>
+        <li><span class="pill p-warm">Suspicious</span><span>Low similarity, a flagged keyword or an unsure judge. Goes to a human with the reason shown.</span></li>
+        <li><span class="pill p-bad">Fail</span><span>A number, entity or required sentence is wrong. Always reviewed, whatever the overall score.</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="h-open">
+  <div class="sec-head">
+    <span class="eyebrow">Still to decide</span>
+    <h2 id="h-open">Three open questions for the team</h2>
+  </div>
+  <ul class="open">
+    <li><b>Client data.</b> The daily job reads real conversations, so it must run inside RBC's environment with personal details masked.</li>
+    <li><b>Sample size.</b> What % of conversations per language is enough to trust the daily number?</li>
+    <li><b>Thresholds.</b> The similarity cut-off for a suspicious case should be set from a native-labelled sample, not guessed.</li>
+  </ul>
+</section>
+
+<footer>PolyBot Agent · Fall 2026 Quest Student Program Case Competition · team working draft</footer>
+</main>
+
+<script>
+(function(){
+  var calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // cycle the highlighted stage
+  var stages = document.querySelectorAll('#pipe .stage'), at = 0;
+  if(!calm){ setInterval(function(){ stages[at].classList.remove('on'); at = (at+1) % stages.length; stages[at].classList.add('on'); }, 2200); }
+
+  // entrance animation from a visible resting state
+  if(!calm && 'IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }); }, {threshold:.15});
+    document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+  }
+
+  // replay the worked example
+  var items = Array.prototype.slice.call(document.querySelectorAll('#results li'));
+  var finals = items.map(function(li){ return {cls: li.className, ico: li.querySelector('.ico').textContent}; });
+  var verdict = document.getElementById('verdict'), timers = [];
+  function settle(){ items.forEach(function(li,i){ li.className = finals[i].cls; li.querySelector('.ico').textContent = finals[i].ico; }); verdict.classList.remove('hide'); }
+  function play(){
+    timers.forEach(clearTimeout); timers = [];
+    if(calm){ settle(); return; }
+    verdict.classList.add('hide');
+    items.forEach(function(li){ li.className = 'idle'; li.querySelector('.ico').textContent = '·'; });
+    items.forEach(function(li,i){
+      timers.push(setTimeout(function(){ li.className = 'wait'; }, i*650));
+      timers.push(setTimeout(function(){ li.className = finals[i].cls; li.querySelector('.ico').textContent = finals[i].ico; }, i*650+520));
+    });
+    timers.push(setTimeout(function(){ verdict.classList.remove('hide'); }, items.length*650+200));
+  }
+  document.getElementById('replay').addEventListener('click', play);
+  if(!calm && 'IntersectionObserver' in window){
+    var once = new IntersectionObserver(function(es){ if(es[0].isIntersecting){ play(); once.disconnect(); } }, {threshold:.5});
+    once.observe(document.getElementById('results'));
+  }
+})();
+</script>
+</body>
+</html>
